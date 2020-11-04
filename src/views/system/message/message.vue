@@ -1,0 +1,522 @@
+<template>
+	<div class="xiaoxi">
+		<div class="xiaoxi_nav">
+			<ul>
+				<li v-on:click="toaddlist">新建</li>
+				<li>删除</li>
+				<li>回复</li>
+				<li>转发</li>
+				<li>接收</li>
+			</ul>
+		</div>
+		<div class="xiaoxi_content">
+			<div class="left">
+				<ul>
+					<li :class="{'leftclick':index === leftlistnum}" v-for="(item,index) in leftlist" @click="leftlistclick(index)"><i
+						 :class="item.name"></i>&nbsp;&nbsp;{{item.value}}</li>
+				</ul>
+			</div>
+			<div class="right">
+				<div class="right_top">
+					<div class="top_nav">
+						<div class="nav_left">
+							<span>消息类型</span>
+						</div>
+						<div class="nav_right" style="display: flex;">
+							<ul>
+								<li :class="{'navRigtClick':index === navRight}" v-for="(item,index) in navRightLi" :key="index" @click="navRightLiClick(index)">{{item.value}}</li>
+							</ul>
+							<div class="processed">
+								<Checkbox v-model="single">包含已处理</Checkbox>
+							</div>
+							<div class="inquire" @click="inquire">
+								<span>查询</span>
+								<i class="el-icon-caret-bottom"></i>
+							</div>
+
+						</div>
+
+					</div>
+					<div class="conceal" v-show="inquires">
+						<div class="conceal_left">
+
+							<div class="">
+								<span>主题</span> &nbsp; &nbsp;
+								<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+							</div>
+							<div class="conceleft">
+								<span>发送人</span> &nbsp; &nbsp;
+								<el-input v-model="input1" size="mini" style="width: 120px;" class="input1" suffix-icon="el-icon-search"></el-input>
+							</div>
+							<div class="conceleft">
+								<span>来源</span> &nbsp; &nbsp;
+								<Select v-model="model2" size="small" style="width:120px">
+								        <Option v-for="item in cityList" :value="item.value" :key="item.value">{{ item.label }}</Option>
+								    </Select>
+							</div>
+							<div class="conceleft">
+								<span>日期</span> &nbsp; &nbsp;
+								<Select v-model="model3" size="small" style="width:120px">
+								        <Option v-for="item in cityList1" :value="item.value" :key="item.value">{{ item.label }}</Option>
+								    </Select>
+							</div>
+						</div>
+						<div class="concel_right">
+							<p>
+								查询
+							</p>
+							 
+						</div>
+					</div>
+				    <div class="top_navlist">
+						 <Table   ref="selection" :columns="columns4" :data="data1"></Table>
+					</div>
+				</div>
+				<div class="right_bottom">
+					 <div class="bottom_nav">
+						 <div class="bottom_nav_left">
+							 <p>标题：</p>
+							 <p>附件：</p>
+						 </div>
+						 <div class="bottom_nav_right">
+							 <span>发送人：</span>
+							 <span>发送时间：</span>
+						 </div>
+					 </div>
+				</div>
+			</div>
+		</div>
+	</div>
+</template>
+
+<script>
+	export default {
+		name: "xiaoxi",
+		data() {
+			return {
+				inquires:false,
+				input1: '',
+				single: false,
+				leftlistnum: 0,
+				model2:'',
+				model3:'',
+				 cityList: [
+				                    {
+				                        value: '合并数据消息',
+				                        label: '合并数据消息'
+				                    },
+				                    {
+				                        value: '绘制',
+				                        label: '回执'
+				                    },
+				                    {
+				                        value: '帆布是书记节后苏熊',
+				                        label: '帆布是书记节后苏熊'
+				                    },
+				                    {
+				                        value: '任务分贝放散',
+				                        label: '任务分贝放散'
+				                    },
+				                    {
+				                        value: '是可以回答',
+				                        label: '书记暗示法'
+				                    },
+				                    {
+				                        value: '1234412',
+				                        label: '123124'
+				                    },
+									{
+									    value: '12443',
+									    label: '23423'
+									},
+									{
+									    value: '23434',
+									    label: '534553'
+									}
+				                ],
+								cityList1: [
+								                   {
+								                       value: '一周内',
+								                       label: '一周内'
+								                   },
+								                   {
+								                       value: '一个月内',
+								                       label: '一个月内'
+								                   },
+								                   {
+								                       value: '三个月内',
+								                       label: '三个月内'
+								                   },
+								                   {
+								                       value: '半年内',
+								                       label: '半年内'
+								                   },
+								                   {
+								                       value: '一年内',
+								                       label: '一年内'
+								                   }
+								               ],
+				leftlist: [{
+						name: 'el-icon-download',
+						value: "已收到消息"
+					},
+					{
+						name: 'el-icon-message-solid',
+						value: "通知消息"
+					},
+					{
+						name: 'el-icon-s-cooperation',
+						value: "工作任务"
+					},
+					{
+						name: 'el-icon-s-opportunity',
+						value: "预警消息"
+					},
+					{
+						name: 'el-icon-upload2',
+						value: "已发送消息"
+					},
+					{
+						name: 'el-icon-delete-solid',
+						value: "已删除消息"
+					}
+				],
+				navRight:0,
+			    navRightLi:[
+					{value:'一周前'},
+					{value:'一月内'},
+					{value:'三月内'}
+				],
+				 columns4: [
+				                    {
+				                        type: 'selection',
+				                        width: 60,
+				                        align: 'center'
+				                    },
+				                    {
+				                        title: '状态',
+				                        key: 'one'
+				                    },
+				                    {
+				                        title: '优先级',
+				                        key: 'tow'
+				                    },
+				                    {
+				                        title: '附件',
+				                        key: 'three'
+				                    },
+									{
+									    title: '主题',
+									    key: 'four'
+									},
+									{
+									    title: '发件人',
+									    key: 'five'
+									},
+									{
+									    title: '发送时间',
+									    key: 'six'
+									},
+									{
+									    title: '消息类型',
+									    key: 'seven'
+									}
+				                ],
+				                data1: [
+				                    {
+				                        one: 'John Brown',
+				                        tow: 18,
+				                        three: 'New York No. 1 Lake Park',
+				                        four: '2016-10-03',
+										five:'111',
+										six:'222',
+										seven:'333'
+				                    },
+				                    {
+				                        one: 'John Brown',
+				                        tow: 18,
+				                        three: 'New York No. 1 Lake Park',
+				                        four: '2016-10-03',
+				                        five:'111',
+				                        six:'222',
+				                        seven:'333'
+				                    },
+				                    {
+				                      one: 'John Brown',
+				                      tow: 18,
+				                      three: 'New York No. 1 Lake Park',
+				                      four: '2016-10-03',
+				                      five:'111',
+				                      six:'222',
+				                      seven:'333'
+				                    },
+				                    {
+				                      one: 'John Brown',
+				                      tow: 18,
+				                      three: 'New York No. 1 Lake Park',
+				                      four: '2016-10-03',
+				                      five:'111',
+				                      six:'222',
+				                      seven:'333'
+				                    }
+				                ]
+			}
+		},
+		methods: {
+			leftlistclick(index) {
+				this.leftlistnum = index
+			},
+			inquire() {
+                  this.inquires = !this.inquires
+			},
+			navRightLiClick(index){
+				this.navRight = index
+			},
+			toaddlist(){
+				this.$router.push({
+					name:"addlist"
+				})
+			}
+		}
+	}
+</script>
+
+<style scoped="scoped">
+	/* 导航栏背景 */
+	.xiaoxi_nav {
+		width: 100%;
+		height: 40px;
+		background-image: linear-gradient(#4886c5, #145494);
+
+		padding: 5px;
+	}
+
+	/* 导航栏下的ul li 样式设置 */
+	.xiaoxi_nav ul li {
+		float: left;
+		line-height: 28px;
+		color: white;
+		border: 1px solid #5681af;
+		font-size: 0.75rem;
+		height: 28px;
+		width: 58px;
+		text-align: center;
+		border-radius: 5px;
+		background-image: linear-gradient(#71a1d2, #174f89);
+		cursor: pointer;
+	}
+
+	.xiaoxi_nav ul li:nth-child(1) {
+		margin-left: 5px;
+	}
+
+	.xiaoxi_nav ul li:nth-child(2) {
+		margin-right: 10px;
+	}
+
+	.xiaoxi_nav ul li:nth-child(4) {
+		margin-right: 10px;
+	}
+
+	.xiaoxi_nav ul li:hover {
+		/* opacity: 0.6; */
+		background-image: linear-gradient(#92bde5, #1f548b);
+	}
+
+	/* 内容 */
+	.xiaoxi_content {
+		background-color: #FFFFFF;
+		width: 100%;
+		height: 100%;
+		border: 1px solid #c0c0c0;
+		display: flex;
+	}
+
+	/* 左侧内容 */
+	.left {
+		width: 250px;
+		height: 100%;
+		background-color: #efefef;
+		font-size: 0.875rem;
+	}
+
+	.left ul {
+		margin-top: 20px;
+		margin-left: 10px;
+		margin-right: 10px;
+	}
+
+	.left ul li {
+		/* margin-top: 16px; */
+		width: 100%;
+		height: 30px;
+		line-height: 30px;
+		cursor: pointer;
+	}
+
+	.leftclick {
+		color: #d1762f;
+		background-image: linear-gradient(#fce5d1, #f9dcbf);
+		border: 1px solid #eab88f;
+		border-radius: 5px;
+	}
+
+	.left ul li:nth-child(2) {
+		padding-left: 40px;
+	}
+
+	.left ul li:nth-child(3) {
+		padding-left: 40px;
+	}
+
+	.left ul li:nth-child(4) {
+		padding-left: 40px;
+	}
+
+	/* 右侧内容 */
+	.right {
+		width: 100%;
+		height: 100%;
+		/* background-color: #efefef; */
+	}
+
+	.right_top {
+		width: 100%;
+		height: 50%;
+		border: 1px solid #b4b4b6;
+		border-width: 0px 0px 0px 1px;
+	}
+
+	.right_bottom {
+		width: 100%;
+		height: 50%;
+		border: 1px solid #b4b4b6;
+		border-width: 1px 0px 0px 1px;
+	}
+
+	/* 右侧导航栏 */
+	.top_nav {
+		display: flex;
+		justify-content: space-between;
+		background-image: linear-gradient(#ffffff, #e9e9e9);
+		font-size: 0.875rem;
+		color: #000000;
+		border-bottom: 1px solid #b4b4b6;
+		width: 100%;
+		height: 32px;
+		line-height: 32px;
+	}
+
+	.top_nav ul li {
+		float: left;
+	}
+
+	.nav_right ul {
+		margin-right: 60px;
+
+	}
+
+	.nav_right ul li {
+		width: 80px;
+		height: 22px;
+		/* background-color: #0077AA; */
+		margin-top: 5px;
+		line-height: 22px;
+		border: 1px solid #c7c8c8;
+		text-align: center;
+	}
+    .navRigtClick{
+		border: 1px solid #6396ca;
+		color: #186ec6;
+		background-image: linear-gradient(#dbebf7 , #b6daf8);
+	}
+	.nav_right ul li:nth-child(1) {
+		border-radius: 10px 0px 0px 0px;
+	}
+
+	.nav_right ul li:nth-child(3) {
+		border-radius: 0px 0px 10px 0px;
+	}
+
+	.processed {
+		margin-right: 60px;
+	}
+
+	.processed span {
+		margin-left: 10px;
+	}
+
+	.processed input {}
+
+	.inquire {
+		margin-right: 40px;
+	}
+
+	/* 隐藏/显示 */
+	.conceal {
+		display: flex;
+		justify-content: space-between;
+		background-image: linear-gradient(#ffffff, #e9e9e9);
+		font-size: 0.875rem;
+		color: #000000;
+		border-bottom: 1px solid #b4b4b6;
+		width: 100%;
+		height: 36px;
+		line-height: 36px;
+	}
+
+	.conceleft {
+		margin-left: 20px;
+	}
+
+	.conceal_left {
+		display: flex;
+	}
+
+	.concel_right {
+		margin-right: 40px;
+		
+		text-align: center;
+	}
+
+	.concel_right p{
+		width: 50px;
+		height: 26px;
+	    border: 1px solid #c9c9c9;
+		background-image: linear-gradient(#fdfdfe , #e4e5e7);
+		border-radius: 12px 0px 12px 0px;
+	    margin-top: 5px;
+		line-height: 26px;
+	}
+	/* 脚步内容 */
+	.bottom_nav{
+		width: 100%;
+		height: 100px;
+		background-image: linear-gradient(#fdfdfe , #f5f5f6);
+		border-bottom: 1px solid #c1c1c3;
+		font-size: 0.625rem;
+		color: #000000;
+		display: flex;
+		justify-content: space-between;
+	}
+	.bottom_nav_left{
+		/* padding-top: 16px; */
+	}
+	.bottom_nav_left p{
+		margin-top: 20px;
+	}
+	.bottom_nav_right{
+		padding-top: 20px;
+	}
+	.bottom_nav_right span{
+		margin-left: 30px;
+	}
+</style>
+<style>
+	.input1 .el-input__inner {
+		height: 20px;
+		padding-left: 5px;
+
+	}
+	
+</style>
