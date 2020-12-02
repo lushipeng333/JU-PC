@@ -1,0 +1,259 @@
+<template>
+  <div class="login-container">
+    <div class="page">
+      <div class="page_top">
+        <div class="logo">
+          <img src="../assets/login/logo.png" alt="">
+          <span> 门窗智能管理专家 </span>
+        </div>
+      </div>
+      <div class="page_bottom">
+        <Form ref="formInline" :model="formInline" :rules="ruleInline" inline style="height: 100%;">
+          <FormItem prop="username">
+            <div class="system">
+              <span>用户</span>
+              <Input v-model="formInline.username" type="text" placeholder="请输入用户名" style="width: 260px" :maxlength="11" />
+            </div>
+          </FormItem>
+          <FormItem prop="password">
+            <div class="system">
+              <span>密码</span>
+              <Input v-model="formInline.password" type="password" placeholder="请输入密码" style="width: 260px" :maxlength="11" />
+            </div>
+          </FormItem>
+          <FormItem>
+            <div class="sumbit" @click="handleSubmit('formInline')">
+              登 <br> 录
+            </div>
+          </FormItem>
+        </Form>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+  import Cookies from "js-cookie";
+  import {encrypt,decrypt } from '@/utils/jsencrypt'
+  export default {
+    data() {
+      return {
+        formInline: {
+          username: '',
+          password: ''
+        },
+        ruleInline: {
+          username: [{
+            required: true,
+            message: '请输入用户名',
+            trigger: 'blur'
+          }],
+          password: [{
+              required: true,
+              message: '请输入密码',
+              trigger: 'blur'
+            },
+            {
+              type: 'string',
+              min: 6,
+              message: '密码长度不能少于8位',
+              trigger: 'blur'
+            }
+          ]
+        },
+        massage: {
+          msg: ''
+        },
+        // 提示
+        show: false,
+        model1: '聚辉门窗',
+        // 系统
+        value: '',
+        //
+        cityList: [{
+          value: '聚辉门窗',
+          label: '聚辉门窗'
+        }],
+      };
+    },
+    watch: {
+      $route: {
+        handler: function(route) {
+          this.redirect = route.query && route.query.redirect;
+        },
+        immediate: true
+      }
+    },
+    created() {
+      this.getCookie();
+    },
+    methods: {
+      getCookie() {
+           const username = Cookies.get("username");
+           const password = Cookies.get("password");
+
+           this.formInline = {
+             username: username === undefined ? this.formInline.username : username,
+             password: password === undefined ? this.formInline.password : decrypt(password),
+
+           };
+         },
+      handleSubmit(name) {
+        this.$refs.formInline.validate(valid => {
+          if (valid) {
+            if (this.formInline) {
+              Cookies.set("username", this.formInline.username, {
+                expires: 30
+              });
+              Cookies.set("password", encrypt(this.formInline.password), {
+                expires: 30
+              });
+            } else {
+              Cookies.remove("username");
+              Cookies.remove("password");
+            }
+            this.$store
+              .dispatch("Login", this.formInline)
+              .then(() => {
+                this.$router.push({
+                  path: "/"
+                });
+              })
+              .catch(() => {
+                this.getCode();
+              });
+          }
+        });
+      },
+    },
+
+  };
+</script>
+
+<style scoped="scoped">
+  .span1 {
+    color: red;
+  }
+
+  .show {
+    display: flex;
+    margin-top: 10px;
+    position: relative;
+    bottom: 0px;
+    left: 134px;
+
+  }
+
+  .page_top {
+    width: 100%;
+    height: 31%;
+  }
+
+  .page_bottom {
+    width: 100%;
+    height: 69%;
+    padding-top: 20px;
+  }
+
+  /* 背景 */
+  .login_img {
+    background-image: url(../assets/login/hover.png);
+    width: 504px;
+    height: 310px;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    /* position: absolute; */
+  }
+
+  /* 整个页面背景 */
+  .login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: url(../assets/login/login.jpg);
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+  }
+
+  /* 登录框背景 */
+  .page {
+    /* margin-top: 196px; */
+    width: 504px;
+    height: 310px;
+    background: url(../assets/login/register.png);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    /* position: absolute; */
+
+  }
+
+  .sumbit:hover {
+    background: url(../assets/login/BUTTON.png);
+
+  }
+
+  /* 页面logo */
+  .logo {
+
+    display: flex;
+    padding-left: 44px;
+    padding-top: 17px;
+  }
+
+  .logo span {
+    color: #465989;
+    margin-left: 10px;
+    font-size: 32px;
+    font-weight: 900;
+    line-height: 52px;
+  }
+
+  /* 输入框 */
+  .system {
+    display: inline-block;
+    margin-left: 110px;
+    margin-top: 20px;
+  }
+
+  .system span {
+    font-size: 14px;
+    color: #485865;
+    margin-right: 14px;
+
+  }
+
+  /* 登录div */
+  .sumbit {
+    display: flex;
+    width: 54px;
+    height: 225px;
+    position: relative;
+    bottom: 190px;
+    left: 444px;
+    text-align: center;
+    color: #d6e7fc;
+    font-size: 16px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(200, 200, 200, 0);
+    border-radius: 120px 0px 120px 0px;
+
+  }
+
+  .el-form-item {
+    margin-bottom: 12px;
+  }
+</style>
+<style>
+  .ivu-form-item-error-tip {
+    position: absolute;
+    top: 100%;
+    left: 150px;
+  }
+
+  .ivu-form-inline .ivu-form-item {
+    display: block;
+  }
+</style>

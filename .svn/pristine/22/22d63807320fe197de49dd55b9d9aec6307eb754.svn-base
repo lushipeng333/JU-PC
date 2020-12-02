@@ -1,0 +1,202 @@
+<template>
+	<div class="navigation">
+		<div class="navigation_nav">
+		</div>
+		<div class="list">
+			<div class="list_one">
+        <!-- 左侧导航栏 -->
+				<ul>
+					<li v-for="(item,index) in nav" :key="index" :class="{listHover:index === listNum }" @click="listClick(index)">
+						<svg class="icon icons" aria-hidden="true">
+								<use :xlink:href="item.icon"></use>
+							</svg>
+							{{item.name}}
+						</li>
+				</ul>
+			</div>
+      <div class="list_right">
+        <el-tabs   :tab-position="tabPosition" class="list_right_tabs">
+           <el-tab-pane  v-for="(item,index) in list" :label="item.meta.title" :key="index" >
+            <div class="system_list" v-for="(item1,index1) in item.children">
+             <h1>{{item1.meta.title}}</h1>
+             <ul>
+
+               <router-link :to="rt">
+                 	<li
+              			v-for="(item2,index2) in item1.children"
+                    :key='index2'
+                    :class="{rtHover:index2 == rtnum}"
+                   @click="aaa(item2,index2)"
+              		>
+              			{{item2.meta.title}}
+              			</li>
+               </router-link>
+
+              </ul>
+             </div>
+
+           </el-tab-pane>
+         </el-tabs>
+      </div>
+			<div class="navigation_son">
+				<!-- <router-view></router-view> -->
+			</div>
+		</div>
+	</div>
+	</div>
+</template>
+<script src="./iconfont.js"></script>
+<script>
+  import {
+    getRouters
+  } from '@/api/menu'
+	export default {
+		name: 'navigation',
+		data() {
+			return {
+         rtnum:'',
+         tabPosition: 'left',
+				   modal10: false,
+				nav: [{
+						name: "系统管理",
+						icon: '#icon-diannao'
+					},
+					// {
+					// 	name: "常用功能",
+					// 	icon: '#icon-lianjie'
+					// }
+				],
+				list: [],
+				listNum: 0,
+				rt: '',
+			}
+		},
+		methods: {
+      aaa(item2,index2){
+        this.rtnum = index2
+        this.rt =  '/' + item2.component
+      },
+			listClick(index) {
+				this.listNum = index
+
+			},
+
+		},
+		created() {
+		  getRouters()
+		    .then(res => {
+		      let that = this;
+		      that.list = res.data
+		      console.log(res)
+		    })
+
+		}
+	}
+</script>
+
+<style scoped="scoped">
+	/* 字体图标 */
+	.icon {
+	  width: 1em;
+	  height: 1em;
+	  vertical-align: -0.15em;
+	  fill: currentColor;
+	  overflow: hidden;
+	}
+
+.navigation{
+  width: 100%;
+  height: 100%;
+}
+	/* 导航栏背景 */
+	.navigation_nav {
+		width: 100%;
+		height: 30px;
+		background-image: linear-gradient(#4886c5, #145494);
+
+	}
+
+	/* 内容 */
+	.list {
+			background-color: #FFFFFF;
+			width: 100%;
+			height: 100%;
+			border: 1px solid #c0c0c0;
+		  display: flex;
+			position: relative;
+      overflow: auto;
+	}
+
+	/* 左侧第一菜单栏 */
+	.list_one {
+		background-image: linear-gradient(#ebf8fb, #8ec9e9);
+		height: 100%;
+		width: 10%;
+		/* text-align: center;	 */
+	}
+
+	.list_one ul li {
+
+		height: 30px;
+		font-size: 14px;
+		/* color: #3d6b99; */
+		margin-top: 10px;
+		margin-left: 10px;
+		line-height: 30px;
+		padding-left: 10px;
+		font-weight: bold;
+	}
+
+	 .listHover{
+		background-color: #FFFFFF;
+		border: 1px solid #c0c0c0;
+		border-radius: 20px 0 0 0;
+		color: red;
+		border-width: 1px 0px 1px 1px;
+
+	}
+  .system_list h1{
+    font-weight: 550;
+    font-size: 16px;
+    color: #4482c1;
+
+  }
+  .list_right{
+    width: 90%;
+    height: 100%;
+  }
+  .list_right_tabs{
+    width: 100%;
+    height: 100%;
+  }
+  .system_list ul {
+    margin-left: 20px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+  .system_list{
+    float: left;
+    display: inline-block;
+     margin-left: 20px;
+     margin-right: 20px;
+     height: 100%;
+  }
+.system_list ul li{
+  list-style: disc;
+  margin-top: 14px;
+  margin-bottom: 14px;
+
+}
+.rtHover{
+
+}
+</style>
+<style>
+  .el-tabs__content{
+    margin-top: 20px;
+    /* padding-bottom: 20px; */
+   /* width: 80%; */
+    /* border-right: 1px solid #c1c1c2; */
+    height: 100%;
+  }
+</style>

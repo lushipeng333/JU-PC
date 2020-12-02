@@ -1,0 +1,352 @@
+<template>
+  <div class="project_buildinginfo">
+    <div class="project_buildinginfo_top">
+      <ul v-show="show">
+        <li @click="handleAdd">新增</li>
+        <li>修改</li>
+        <li>删除</li>
+        <li>对比</li>
+        <li>导出</li>
+        <li>导入</li>
+        <li>修改窗型</li>
+        <li>快速添加</li>
+      </ul>
+      <ul v-show="!show">
+        <li @click="submitForm">保存</li>
+        <li @click="cancel">取消</li>
+      </ul>
+    </div>
+    <div class="project_buildinginfo_conter">
+      <!-- 添加或修改参数 -->
+        <el-form ref="form" :model="form" :rules="rules" label-width="130px" v-show="!show">
+          <el-row>
+            <el-col :span="8">
+              <el-form-item label="项目名称" prop="projectName">
+               <el-select v-model="form.projectId" placeholder="请选择项目名称" >
+                 <el-option v-for="dict in projectNameList" :key="dict.projectId" :label="dict.projectName" :value="dict.projectId" />
+               </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="楼号" prop="buildingNo">
+                <el-input v-model="form.buildingNo" placeholder="请输入用户昵称" clearable />
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item label="楼层" prop="floorNo">
+                <el-input v-model="form.floorNo" placeholder="请输入用户昵称" clearable />
+              </el-form-item>
+            </el-col>
+            </el-row>
+            <el-row>
+              <el-col :span="8">
+                <el-form-item label="窗号" prop="winNo">
+                  <el-input v-model="form.winNo" placeholder="请输入用户昵称" clearable />
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="窗型编号" prop="winModelCode">
+                  <el-input v-model="form.winModelCode" placeholder="请输入用户昵称" clearable />
+                </el-form-item>
+              </el-col>
+              <el-col :span="8">
+                <el-form-item label="位置编码 " prop="openingDirection">
+                  <el-input v-model="form.openingDirection" placeholder="请输入用户昵称" clearable />
+                </el-form-item>
+              </el-col>
+              </el-row>
+              <el-row>
+                <el-col :span="8">
+                  <el-form-item label="位置说明" prop="directionComment">
+                    <el-input v-model="form.directionComment" placeholder="请输入用户昵称" clearable />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="楼层类别" prop="floorType">
+                    <el-input v-model="form.floorType" placeholder="请输入用户昵称" clearable />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="图纸尺寸(宽/mm)" prop="drawingWidth">
+                    <el-input v-model="form.drawingWidth" placeholder="请输入用户昵称" clearable />
+                  </el-form-item>
+                </el-col>
+                </el-row>
+                <el-row>
+                  <el-col :span="8">
+                    <el-form-item label="图纸尺寸(高/mm)" prop="drawingHeight">
+                      <el-input v-model="form.drawingHeight" placeholder="请输入用户昵称" clearable />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="8">
+                    <el-form-item label="洞口尺寸(宽/mm)" prop="holeWidth">
+                      <el-input v-model="form.holeWidth" placeholder="请输入用户昵称" clearable />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="8">
+                    <el-form-item label="洞口尺寸(高/mm)" prop="holeHeight">
+                      <el-input v-model="form.holeHeight" placeholder="请输入用户昵称" clearable />
+                    </el-form-item>
+                  </el-col>
+                  </el-row>
+
+        </el-form>
+      <div class="left" v-show="show">
+        <div class="left_bottom">
+          <div class="message">
+            <div class="messagenav">
+              快速查询
+            </div>
+          </div>
+          <div class="messageli">
+            <el-form :model="queryParams" ref="queryForm" :inline="true" label-width="68px">
+              <el-form-item label="项目名称">
+                <el-select v-model="queryParams.projectId" clearable placeholder="请选择" size="mini">
+                <el-option v-for="dict in projectNameList" :key="dict.projectId" :label="dict.projectName" :value="dict.projectId" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="楼号">
+                <el-select v-model="queryParams.projectId" clearable placeholder="请选择" size="mini">
+                <el-option v-for="dict in projectNameList" :key="dict.projectId" :label="dict.projectName" :value="dict.projectId" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="楼层">
+                <el-select v-model="queryParams.projectId" clearable placeholder="请选择" size="mini">
+                <el-option v-for="dict in projectNameList" :key="dict.projectId" :label="dict.projectName" :value="dict.projectId" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="窗号:" prop="winNo ">
+                <el-input v-model="queryParams.winNo " placeholder="请输入用户姓名" clearable size="mini" style="width: 100%"
+                  @keyup.enter.native="handleQuery" />
+              </el-form-item>
+              <el-form-item label="位置编码:" prop="openingDirection ">
+                <el-input v-model="queryParams.openingDirection " placeholder="请输入用户姓名" clearable size="mini" style="width: 100%"
+                  @keyup.enter.native="handleQuery" />
+              </el-form-item>
+              <el-form-item>
+                <el-button type="cyan" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+                <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+        </div>
+      </div>
+      <div class="right" v-show="show">
+        <div class="rigtop">
+          查询结果
+        </div>
+        <el-table :data="buildinginfoList" @selection-change="handleSelectionChange" height="100%">
+          <el-table-column type="selection" width="50" align="center" />
+          <el-table-column label="序号" align="center" type="index" />
+          <el-table-column label="项目名称" align="center" prop="projectName" :show-overflow-tooltip="true" />
+          <el-table-column label="楼号" align="center" prop="buildingNo" :show-overflow-tooltip="true" />
+          <el-table-column label="楼层" align="center" prop="floorNo" :show-overflow-tooltip="true" />
+          <el-table-column label="窗号" align="center" width="120" prop="winNo" />
+          <el-table-column label="窗型编号" align="center" prop="winModelCode" :show-overflow-tooltip="true" />
+          <el-table-column label="窗型图片" align="center" prop="winModelPictureUrl" :show-overflow-tooltip="true" />
+          <el-table-column label="位置编码" align="center" prop="openingDirection" :show-overflow-tooltip="true" />
+          <el-table-column label="位置说明" align="center" prop="directionComment" :show-overflow-tooltip="true" />
+          <el-table-column label="楼层类别" align="center" prop="floorType" :show-overflow-tooltip="true" />
+          <el-table-column label="洞口数量" align="center" prop="holeNum" :show-overflow-tooltip="true" />
+          <el-table-column label="面积(M²)" align="center" prop="area" :show-overflow-tooltip="true" />
+          <el-table-column label="图纸尺寸(宽/mm)" width="120" align="center" prop="drawingWidth" :show-overflow-tooltip="true" />
+          <el-table-column label="图纸尺寸(高/mm)" width="120" align="center" prop="drawingHeight" :show-overflow-tooltip="true" />
+          <el-table-column label="洞口尺寸(宽/mm)" width="120" align="center" prop="holeWidth" :show-overflow-tooltip="true" />
+          <el-table-column label="洞口尺寸(高/mm)" width="120" align="center" prop="holeHeight" :show-overflow-tooltip="true" />
+          <el-table-column label="创建人" align="center" prop="createBy" :show-overflow-tooltip="true" />
+        </el-table>
+        <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize"
+          @pagination="getlist" />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  import {
+    listBuildinginfo,
+    getProject,
+  } from "@/api/project/project_buildinginfo.js";
+  export default {
+    name: 'buildinginfo',
+    data() {
+      return {
+        show: true,
+        // 总条数
+        total: 0,
+        // 列表数据
+        buildinginfoList:[],
+        // 项目名称数组
+        projectNameList: [],
+        // 表单参数
+              form: {},
+              // 表单校验
+                    rules: {
+                      userName: [
+                        { required: true, message: "用户名称不能为空", trigger: "blur" },
+                      ],
+                      nickName: [
+                        { required: true, message: "用户昵称不能为空", trigger: "blur" },
+                      ],
+                      deptId: [
+                        { required: true, message: "归属部门不能为空", trigger: "blur" },
+                      ],
+                      password: [
+                        { required: true, message: "用户密码不能为空", trigger: "blur" },
+                      ],
+                      email: [
+                        { required: true, message: "邮箱地址不能为空", trigger: "blur" },
+                        {
+                          type: "email",
+                          message: "'请输入正确的邮箱地址",
+                          trigger: ["blur", "change"],
+                        },
+                      ],
+                      phonenumber: [
+                        { required: true, message: "手机号码不能为空", trigger: "blur" },
+                        {
+                          pattern: /^1[3|4|5|6|7|8|9][0-9]\d{8}$/,
+                          message: "请输入正确的手机号码",
+                          trigger: "blur",
+                        },
+                      ],
+                    },
+        // 查询参数
+        queryParams: {
+          pageNum: 1,
+          pageSize: 10,
+          projectId : undefined,
+          buildingNo : undefined,
+          floorNo : undefined,
+          winNo : undefined,
+          openingDirection : undefined
+        },
+      }
+    },
+    created() {
+      this.getlist()
+      getProject().then(res => {
+        this.projectNameList = res.data;
+      })
+    },
+    methods: {
+      getlist(){
+        listBuildinginfo(this.queryParams).then(response =>{
+          this.buildinginfoList = response.rows
+          this.total = response.total;
+        })
+      },
+      /** 搜索按钮操作 */
+      handleQuery() {
+       this.getlist()
+      },
+      /** 重置按钮操作 */
+      resetQuery() {
+        this.queryParams = {
+          pageNum: 1,
+          pageSize: 10,
+          projectId : undefined,
+          buildingNo : undefined,
+          floorNo : undefined,
+          winNo : undefined,
+          openingDirection : undefined
+        },
+        this.getList()
+      },
+      handleSelectionChange(){},
+  // 新增按钮
+  handleAdd() {
+     this.show = false
+  },
+      // 保存
+      submitForm() {
+       this.show = true
+      },
+      // 取消
+      cancel() {
+     this.show = true
+      }
+
+    }
+  }
+</script>
+
+<style scoped="scoped">
+  .project_buildinginfo {
+    width: 100%;
+    height: 100%;
+  }
+
+  .project_buildinginfo_top {
+    background-image: linear-gradient(#5692cf, #00356c);
+    height: 40px;
+    width: 100%;
+    padding: 5px;
+  }
+
+  .project_buildinginfo_top ul li {
+    float: left;
+    line-height: 28px;
+    color: white;
+    border: 1px solid #5681af;
+    font-size: 12px;
+    height: 28px;
+    width: 58px;
+    text-align: center;
+    border-radius: 5px;
+    background-image: linear-gradient(#71a1d2, #174f89);
+    cursor: pointer;
+  }
+
+  .project_buildinginfo_conter {
+    background-color: #FFFFFF;
+    width: 100%;
+    height: 100%;
+    border: 1px solid #c0c0c0;
+    display: flex;
+  }
+
+  .left {
+    width: 16%;
+    height: 100%;
+    background-color: #efefef;
+    font-size: 14px;
+  }
+
+  .left_bottom {
+    width: 100%;
+    height: 40%;
+  }
+
+  .message {
+    width: 100%;
+    height: 30px;
+    line-height: 30px;
+    font-size: 12px;
+    background-image: linear-gradient(#fdfdfe, #cfd0d1);
+    padding-left: 10px;
+    display: flex;
+    justify-content: space-between;
+    padding-right: 10px;
+
+  }
+
+  .messagenav {
+    color: #2a5b8c;
+    font-weight: 900;
+
+  }
+
+  .right {
+    width: 84%;
+    height: 82%;
+  }
+  .rigtop{
+  	width: 100%;
+  	height: 24px;
+  	line-height: 24px;
+  	background-image: linear-gradient(#ffffff , #e5e5e5);
+  	font-size: 12px;
+  	color: #000000;
+  }
+</style>

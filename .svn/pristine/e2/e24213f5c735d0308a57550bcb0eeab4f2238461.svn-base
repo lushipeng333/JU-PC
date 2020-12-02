@@ -1,0 +1,191 @@
+<template>
+	<div class="login-container">
+		<div :class="{page : register , login_img : registers}">
+			<div class="logo">
+				<img src="../assets/login/logo.png" alt="">
+				<span> 门窗智能管理专家 </span>
+			</div>
+
+			<!-- 系统 -->
+			<!-- <div class="system">
+				<span>系统 </span>
+				<Select v-model="model1" style="width:260px">
+					<Option v-for="item in cityList" :value="item.value" :key="item.value">{{ item.label }}</Option>
+				</Select>
+			</div> -->
+			<!-- 用户 -->
+			<div class="system">
+				<span>用户</span>
+				<Input v-model="username" placeholder="" style="width: 260px" />
+			</div>
+			<!-- 密码 -->
+			<div class="system">
+				<span>密码</span>
+				<Input v-model="password" placeholder="" style="width: 260px" />
+
+			</div>
+			<div class="show">
+				<span style="color: white;">----</span>
+				<span class="span1" v-show="show">名称或密码错误</span>
+				<!-- <span class="span2" v-show="!show">请输入账号和密码</span> -->
+			</div>
+			<div class="sumbit" @mouseover="hoves" @mouseout="nohove" @click="sumbit">
+				登 <br> 录
+			</div>
+
+		</div>
+
+
+
+
+	</div>
+</template>
+<script>
+	export default {
+		data() {
+			return {
+				// 提示
+				show: false,
+				// 判断登录界面是否hover状态/
+				register: true,
+				registers: false,
+				model1: '聚辉门窗',
+				// 系统
+				value: '',
+				// 用户
+				username: '',
+				// 密码
+				password: '',
+				cityList: [{
+					value: '聚辉门窗',
+					label: '聚辉门窗'
+				}],
+
+
+
+			};
+		},
+		methods: {
+
+			hoves() {
+				this.register = false
+				this.registers = true
+
+			},
+			nohove() {
+				this.register = true
+				this.registers = false
+			},
+			sumbit() {
+				if (this.username == 123 && this.password == 123) {
+					this.$router.push({
+						path: '/home'
+					})
+				} else {
+					this.show = true
+				}
+			}
+		},
+
+	};
+</script>
+
+<style scoped="scoped">
+	.span1 {
+		color: red;
+	}
+     
+	.show {
+		display: flex;
+		margin-top: 10px;
+		position: relative;
+		bottom: 0px;
+		left: 134px;
+
+	}
+
+	/* 背景 */
+	.login_img {
+		background-image: url(../assets/login/hover.png);
+		width: 504px;
+		height: 310px;
+		background-repeat: no-repeat;
+		background-size: 100% 100%;
+		/* position: absolute; */
+	}
+
+	/* 整个页面背景 */
+	.login-container {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		background: url(../assets/login/login.jpg);
+		background-size: 100% 100%;
+		background-repeat: no-repeat;
+	}
+
+	/* 登录框背景 */
+	.page {
+		/* margin-top: 196px; */
+		width: 504px;
+		height: 310px;
+		background: url(../assets/login/register.png);
+		background-repeat: no-repeat;
+		background-size: 100% 100%;
+		/* position: absolute; */
+
+	}
+
+	/* 页面logo */
+	.logo {
+		display: flex;
+		padding-left: 44px;
+		padding-top: 40px;
+		margin-bottom: 30px;
+	}
+
+	.logo span {
+		color: #465989;
+		margin-left: 10px;
+		font-size: 32px;
+		font-weight: 900;
+		line-height: 52px;
+	}
+
+	/* 输入框 */
+	.system {
+		display: inline-block;
+		margin-left: 110px;
+		margin-top: 20px;
+	}
+
+	.system span {
+		font-size: 14px;
+		color: #485865;
+		margin-right: 14px;
+
+	}
+
+	/* 登录div */
+	.sumbit {
+		display: flex;
+		width: 54px;
+		height: 200px;
+		position: relative;
+		bottom: 160px;
+		left: 445px;
+		text-align: center;
+		color: #d6e7fc;
+		font-size: 16px;
+		align-items: center;
+		justify-content: center;
+
+	}
+
+	.el-form-item {
+		margin-bottom: 12px;
+	}
+</style>

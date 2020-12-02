@@ -1,0 +1,29 @@
+import request from '@/utils/request'
+
+
+// 查询列表
+export function listchangeFiles(query) {
+  return request({
+    url: '/project/changefiles/list',
+    method: 'get',
+    params: query
+  })
+}
+
+// 编辑
+export function changefilesAdd(data) {
+  return request({
+    url: '/project/changefiles/add',
+    method: 'post',
+    data: data
+  })
+}
+
+// 添加
+export function Addchangefiles(data) {
+  return request({
+    url: '/project/changefiles/add',
+    method: 'post',
+    data: data
+  })
+}

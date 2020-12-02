@@ -1,0 +1,56 @@
+.el-input__inner{
+    width: 100%;
+  }
+  .el-form--inline .el-form-item__label {
+    display: block;
+    text-align: left;
+  }
+  .el-form-item {
+    margin: 0;
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+
+
+  .el-form-item__label{
+   padding-right: 0px;
+   /* padding-top: 10px; */
+  }
+  .el-form,.el-form--inline{
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+ .el-row{
+    margin-top: 20px;
+  }
+  .pagination-container {
+    position: fixed;
+    right: 100px;
+    bottom: 12px;
+
+  }
+  .pagination-container .el-pagination {
+    right: 0;
+    bottom: 0px;
+    position: absolute;
+    background-color: #FFFFFF;
+    z-index: 1000;
+  }
+  .el-select__tags{
+    overflow: hidden;
+    flex-wrap: nowrap;
+  }
+  .input1 .el-input__inner {
+    height: 20px;
+    padding-left: 5px;
+
+  }
+  .el-tabs__content{
+    margin-top: 20px;
+    overflow-x: auto;
+    height: 100%;
+  }
+
+  .el-form--inline .el-form-item__label{
+    display: flex;
+  }

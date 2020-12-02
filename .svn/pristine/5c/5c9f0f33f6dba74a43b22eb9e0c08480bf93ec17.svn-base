@@ -1,0 +1,118 @@
+<template>
+  <div class="projectBudgetPlan">
+      <div class="top">
+
+      </div>
+      <div class="conter">
+
+        <div class="left">
+
+        </div>
+        <div class="right">
+
+        </div>
+      </div>
+
+  </div>
+</template>
+
+<script>
+  export default{
+    name:'',
+    data(){
+      return{
+
+      }
+    },
+    methods:{
+
+    }
+  }
+</script>
+
+<style scoped="scoped">
+  /* 删除修改按钮是否操作 */
+  .notChoose {
+    opacity: 0.8;
+    pointer-events: none;
+  }
+
+  .projectBudgetPlan {
+    width: 100%;
+    height: 100%;
+  }
+  .top {
+    background-image: linear-gradient(#5692cf, #00356c);
+    height: 40px;
+    width: 100%;
+    padding: 5px;
+  }
+
+  .top ul li {
+    float: left;
+    line-height: 28px;
+    color: white;
+    border: 1px solid #5681af;
+    font-size: 0.75rem;
+    height: 28px;
+    min-width: 58px;
+    text-align: center;
+    border-radius: 5px;
+    background-image: linear-gradient(#71a1d2, #174f89);
+    cursor: pointer;
+    margin-left: 12px;
+  }
+
+  .conter {
+    background-color: #FFFFFF;
+    width: 100%;
+    height: 100%;
+    border: 1px solid #c0c0c0;
+    display: flex;
+  }
+
+  .left {
+    width: 16%;
+    height: 100%;
+    background-color: #efefef;
+    font-size: 0.875rem;
+  }
+
+  .left_bottom {
+    width: 100%;
+    height: 40%;
+  }
+
+  .message {
+    width: 100%;
+    height: 30px;
+    line-height: 30px;
+    font-size: 0.75rem;
+    background-image: linear-gradient(#fdfdfe, #cfd0d1);
+    padding-left: 10px;
+    display: flex;
+    justify-content: space-between;
+    padding-right: 10px;
+
+  }
+
+  .messagenav {
+    color: #2a5b8c;
+    font-weight: 900;
+
+  }
+
+  .right {
+    width: 84%;
+    height: 82%;
+  }
+
+  .rigtop {
+    width: 100%;
+    height: 24px;
+    line-height: 24px;
+    background-image: linear-gradient(#ffffff, #e5e5e5);
+    font-size: 0.75rem;
+    color: #000000;
+  }
+</style>

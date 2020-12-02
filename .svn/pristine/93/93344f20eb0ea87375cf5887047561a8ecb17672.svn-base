@@ -1,0 +1,22 @@
+<template>
+  <div class="project_process_norm">
+
+  </div>
+</template>
+
+<script>
+  export default{
+    name:'project_process_norm',
+    data(){
+       return{
+  
+       }
+    },
+    methods:{
+  
+    }
+  }
+</script>
+
+<style>
+</style>

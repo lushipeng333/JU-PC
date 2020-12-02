@@ -1,0 +1,14 @@
+<template>
+	<div class="post">
+		岗位管理组件页面
+	</div>
+</template>
+
+<script>
+	export default{
+		name:'postManagement'
+	}
+</script>
+
+<style>
+</style>

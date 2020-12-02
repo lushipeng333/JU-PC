@@ -1,0 +1,446 @@
+<template>
+  <div class="project_changefiles">
+    <div class="project_changefiles_top">
+
+      <ul v-show="Show">
+        <li @click="handleAdd">新增</li>
+        <li @click="handleUpdate" :class="{'notChoose' : single}" :disabled="single">修改</li>
+        <li :class="{'notChoose' : multiple}" :disabled="multiple" @click="handleDelete">删除</li>
+        <li @click="projectAudit" :class="{'notChoose' : single}" :disabled="single">审核</li>
+        <li @click="handleImport" :class="{'notChoose' : single}" :disabled="single">上传附件</li>
+        <li @click="addDetails" :class="{'notChoose' : single}" :disabled="single">添加变更记录</li>
+        <li @click="UpdateDetails" :class="{'notChoose' : single}" :disabled="single">子修改</li>
+        <li :class="{'notChoose' : multiple}" :disabled="multiple" @click="removeDetailMes">子删除</li>
+      </ul>
+     <ul v-show="!Show">
+      	<li @click="submitForm">保存</li>
+      	<li @click="cancel">取消</li>
+      </ul>
+    </div>
+    <div class="project_changefiles_conter">
+       <div class="hideshow" v-show="!Show">
+         <div class="showtop">
+           <el-form ref="form" :model="sizeForm" label-width="80px" size="mini">
+             <el-col :span="6">
+               <el-form-item label="变更类型">
+               <el-select v-model="sizeForm.region" placeholder="请选择变更类型">
+                 <el-option label="内部变更" value="shanghai"></el-option>
+                 <el-option label="外部变更" value="beijing"></el-option>
+               </el-select>
+             </el-form-item>
+             </el-col>
+             <el-col :span="6">
+               <el-form-item label="项目名称">
+               <el-select v-model="sizeForm.region" placeholder="请选择项目名称">
+                 <el-option label="兴盛苑" value="shanghai"></el-option>
+                 <el-option label="荣邦城" value="beijing"></el-option>
+               </el-select>
+             </el-form-item>
+             </el-col>
+             <el-col :span="6">
+               <el-form-item label="合同名称">
+               <el-input  v-model="sizeForm.name"></el-input>
+             </el-form-item>
+             </el-col>
+             <el-col :span="6">
+               <el-form-item label="合同变更">
+               <el-input v-model="sizeForm.name"></el-input>
+             </el-form-item>
+             </el-col>
+             <el-col :span="12">
+                <el-form-item label="合同变更日期">
+               <el-date-picker
+                   v-model="value1"
+                   type="date"
+                   placeholder="选择日期">
+                 </el-date-picker>
+             </el-form-item>
+             </el-col>
+            <el-col :span="24">
+              <el-form-item label="合同变更原因:">
+               <el-input v-model="sizeForm.name" type="textarea" placeholder="请输入内容"></el-input>
+             </el-form-item>
+            </el-col>
+
+           </el-form>
+         </div>
+         <div class="showbottom">
+           2
+         </div>
+       </div>
+      <div class="conter_left" v-show="Show">
+        <div class="message">
+          <div class="messagenav">
+            快速查询
+          </div>
+        </div>
+        <el-form :model="queryParams" ref="queryForm" :inline="true">
+          <el-form-item label="项目名称">
+            <el-select v-model="queryParams.projectName" clearable placeholder="请选择">
+            <el-option
+                  v-for="item in options"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value">
+                </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="变更类型">
+            <el-select v-model="queryParams.checkStatus" clearable placeholder="请选择">
+              <el-option
+                    v-for="item in options"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value">
+                  </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="审核状态">
+            <el-select v-model="queryParams.manager" clearable placeholder="请选择">
+              <el-option
+                    v-for="item in options"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value">
+                  </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="cyan" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+      <div class="conter_right" v-show="Show">
+          <div class="right_top">
+            <el-table :data="project_changeList" @selection-change="handleSelectionChange" @row-click="projectDetail" height="100%"
+              max-height="100%">
+              <el-table-column type="selection" align="center" />
+              <el-table-column label="序号" type="index" />
+              <el-table-column label="原项目名称 " prop="projectName" :show-overflow-tooltip="true" />
+              <el-table-column label="合同名称" prop="changefilesName" :show-overflow-tooltip="true" />
+              <el-table-column label="合同变更号" prop="changefilesId" :show-overflow-tooltip="true" />
+              <el-table-column label="变更类型" prop="changeType" :show-overflow-tooltip="true" />
+              <el-table-column label="合同变更原因" prop="changeReason" :show-overflow-tooltip="true" />
+              <el-table-column label="合同变更日期" prop="updateTime" :show-overflow-tooltip="true" />
+              <!-- 可点击 -->
+              <el-table-column label="变更附件" prop="changefilesUrl" :show-overflow-tooltip="true" />
+              <el-table-column label="审核状态" prop="checkStatus" :show-overflow-tooltip="true" />
+              <el-table-column label="审核原因" prop="checkContent" :show-overflow-tooltip="true" />
+              <el-table-column label="创建时间" prop="createTime" :show-overflow-tooltip="true" />
+            </el-table>
+
+          </div>
+          <div class="right_bottom">
+            <div class="ss">
+              <ul>
+                <li @click="UpdateDetails" :class="{'notChoose' : single}" :disabled="single">子修改</li>
+                <li :class="{'notChoose' : multiple}" :disabled="multiple" @click="removeDetailMes">子删除</li>
+              </ul>
+            </div>
+            <Tabs value="name1" style="height: 100%;" type="card">
+              <TabPane label="标签一" name="name1" class="aaa" style="height: 100%;">
+                <el-table :data="projectListDetail" @selection-change="handleSelectionChange" height="100%" max-height="100%">
+                  <el-table-column type="selection" align="center" />
+                  <el-table-column label="序号" type="index" />
+                  <el-table-column label="变更类型 " prop="winNo" :show-overflow-tooltip="true" />
+                  <el-table-column label="窗号" prop="partyWinNo" :show-overflow-tooltip="true" />
+                  <el-table-column label="甲方窗号" prop="winModelName" :show-overflow-tooltip="true" />
+                  <el-table-column label="窗型系列名称" prop="projectNum" :show-overflow-tooltip="true" />
+                  <el-table-column label="数量差" prop="preNum" :show-overflow-tooltip="true" />
+                  <el-table-column label="暂估量差" prop="extra1" :show-overflow-tooltip="true" />
+                  <el-table-column label="合同单价差" prop="contractPrice" :show-overflow-tooltip="true" />
+                  <el-table-column label="合同金额差" prop="contractPrice" :show-overflow-tooltip="true" />
+                  <el-table-column label="创建时间" prop="createTime" :show-overflow-tooltip="true" />
+                  <el-table-column label="备注" prop="contractPrice" :show-overflow-tooltip="true" />
+                </el-table>
+              </TabPane>
+              <TabPane label="标签二" name="name2">标签二的内容</TabPane>
+              <TabPane label="标签三" name="name3">标签三的内容</TabPane>
+            </Tabs>
+
+          </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  import {listchangeFiles , listMes_project} from "@/api/project/project_changefiles.js";
+  import request from '@/utils/request'
+  export default {
+    name: 'project_changefiles',
+    data() {
+      return {
+        value1:'',
+        sizeForm: {
+                  name: '',
+                  region: '',
+                  date1: '',
+                  date2: '',
+                  delivery: false,
+                  type: [],
+                  resource: '',
+                  desc: ''
+                },
+        // 表单参数
+        form: {},
+        // 表单校验
+              rules: {
+                userName: [
+                  { required: true, message: "用户名称不能为空", trigger: "blur" },
+                ],
+                nickName: [
+                  { required: true, message: "用户昵称不能为空", trigger: "blur" },
+                ],
+                deptId: [
+                  { required: true, message: "归属部门不能为空", trigger: "blur" },
+                ],
+                password: [
+                  { required: true, message: "用户密码不能为空", trigger: "blur" },
+                ],
+                email: [
+                  { required: true, message: "邮箱地址不能为空", trigger: "blur" },
+                  {
+                    type: "email",
+                    message: "'请输入正确的邮箱地址",
+                    trigger: ["blur", "change"],
+                  },
+                ],
+                phonenumber: [
+                  { required: true, message: "手机号码不能为空", trigger: "blur" },
+                  {
+                    pattern: /^1[3|4|5|6|7|8|9][0-9]\d{8}$/,
+                    message: "请输入正确的手机号码",
+                    trigger: "blur",
+                  },
+                ],
+              },
+        projectListDetail: [],
+        // 项目变更列表数据
+        project_changeList:[],
+        // 新增修改
+        Show:true,
+        // 非单个禁用
+        single: true,
+        // 非多个禁用
+        multiple: true,
+        // 查询参数
+        queryParams: {
+          pageNum:1,
+          pageSize:10,
+          projectId:82
+        },
+         options: [{
+                  value: '选项1',
+                  label: '黄金糕'
+                }, {
+                  value: '选项2',
+                  label: '双皮奶'
+                }, {
+                  value: '选项3',
+                  label: '蚵仔煎'
+                }, {
+                  value: '选项4',
+                  label: '龙须面'
+                }, {
+                  value: '选项5',
+                  label: '北京烤鸭'
+                }],
+      }
+    },
+    created() {
+       this.getList()
+    },
+    methods: {
+      // 查询列表
+          getList(){
+          listchangeFiles().then(
+            response => {
+           this.project_changeList = response.rows;
+            }
+          )
+          .catch(req =>{console.log(req)})
+      },
+      // 新增按钮
+      handleAdd() {
+           this.Show = false
+      },
+      // 修改按钮
+      handleUpdate() {
+
+      },
+      // 删除按钮
+      handleDelete() {
+
+      },
+      // 审核状态
+      projectAudit() {
+
+      },
+      // 上传附件
+      handleImport() {
+
+      },
+      // 添加详情
+      addDetails() {
+
+      },
+      // 子修改
+      UpdateDetails() {
+
+      },
+      // 子删除
+      removeDetailMes() {
+
+      },
+      // 搜索
+      handleQuery() {
+
+
+      },
+      // 重置
+      resetQuery(){
+
+      },
+      // 多选框选中数据
+      handleSelectionChange(){
+
+      },
+      // 点击某一行
+      projectDetail(){
+
+      },
+      // 保存
+      submitForm(){
+        this.Show = true
+      },
+      // 取消
+      cancel(){
+        this.Show = true
+      }
+    },
+
+  }
+</script>
+
+<style scoped="scoped">
+  .project_changefiles {
+    width: 100%;
+    height: 100%;
+  }
+
+  .project_changefiles_top {
+    background-image: linear-gradient(#5692cf, #00356c);
+    height: 40px;
+    width: 100%;
+
+    padding: 5px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .project_changefiles_top ul li {
+    float: left;
+    line-height: 28px;
+    color: white;
+    border: 1px solid #5681af;
+    font-size: 12px;
+    height: 28px;
+    /* width: 58px; */
+    min-width: 58px;
+    text-align: center;
+    border-radius: 5px;
+    background-image: linear-gradient(#71a1d2, #174f89);
+    cursor: pointer;
+    margin-left: 5px;
+  }
+
+  .project_changefiles_top ul li:hover {
+    background-image: linear-gradient(#92bde5, #1f548b);
+  }
+
+  .project_changefiles_conter {
+    background-color: #FFFFFF;
+    width: 100%;
+    height: 100%;
+    border: 1px solid #c0c0c0;
+    display: flex;
+  }
+
+  .conter_left {
+    width: 18%;
+    height: 100%;
+    border-right: 1px solid #b2b2b2;
+    overflow: auto;
+    background-color: #efefef;
+    font-size: 14px;
+
+  }
+
+  .message {
+    width: 100%;
+    height: 30px;
+    line-height: 30px;
+    font-size: 12px;
+    background-image: linear-gradient(#fdfdfe, #cfd0d1);
+    padding-left: 10px;
+    display: flex;
+    justify-content: space-between;
+    padding-right: 10px;
+
+  }
+
+  .messagenav {
+    color: #2a5b8c;
+    font-weight: 900;
+
+  }
+
+  .conter_right {
+    width: 82%;
+    height: 100%;
+  }
+  .right_bottom {
+    position: relative;
+    width: 100%;
+    height: 42%;
+    /* padding-bottom: 60px; */
+    /* overflow: auto; */
+  }
+  .right_top {
+    width: 100%;
+    height: 40%;
+    /* border-bottom: 1px solid #b2b2b2; */
+    /* overflow: auto; */
+
+  }
+  .ss{
+    display: flex;
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+  .ss ul li{
+    float: left;
+    width: 40px;
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    background-color: red;
+  }
+  .hideshow{
+    width: 100%;
+    height: 100%;
+  }
+  .showtop{
+    width: 100%;
+    height: 40%;
+
+  }
+  .showbottom{
+    width: 100%;
+    height: 44%;
+    background-color: aliceblue;
+  }
+</style>

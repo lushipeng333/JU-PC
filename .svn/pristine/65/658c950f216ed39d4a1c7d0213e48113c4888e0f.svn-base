@@ -1,0 +1,236 @@
+<template>
+	<div class="roleManagement">
+		<div class="roleManagement_top">
+			<ul>
+				<li @click="handleAdd">新增</li>
+				<li @click="handleUpdate">修改</li>
+				<li @click="getTreeselect">删除</li>
+			</ul>
+		</div>
+		<div class="roleManagement_conter">
+			<div class="conter_left">
+				<el-tree
+				  class="filter-tree"
+				  :data="lablist"
+				  :props="defaultProps"
+				  :default-expand-all="false"
+				  :filter-node-method="filterNode"
+				  ref="tree">
+				</el-tree>
+
+			</div>
+			<div class="conter_right">
+				<div>
+					<ul>
+					<li>
+						<span>菜单名称</span> &nbsp; &nbsp;
+						<el-input v-model="input1" size="mini" style="width: 200px;" class="input1"></el-input>
+					</li>
+					<li>
+						<span>状态</span> &nbsp; &nbsp;
+						<el-input v-model="input1" size="mini" style="width: 200px;" class="input1"></el-input>
+					</li>
+				</ul>
+				</div>
+
+
+			</div>
+		</div>
+	</div>
+</template>
+
+<script>
+  import { listMenu, getMenu, delMenu, addMenu, updateMenu } from "@/api/system/menu";
+  import Treeselect from "@riophae/vue-treeselect";
+  import "@riophae/vue-treeselect/dist/vue-treeselect.css";
+  import IconSelect from "@/components/IconSelect";
+	 export default {
+		 name:"roleManagement",
+      components: { Treeselect, IconSelect },
+		 data(){
+			 return{
+          // 遮罩层
+               loading: true,
+               // 显示搜索条件
+               showSearch: true,
+               // 菜单表格树数据
+               menuList: [],
+               // 菜单树选项
+               menuOptions: [],
+               // 弹出层标题
+               title: "",
+               // 是否显示弹出层
+               open: false,
+               // 显示状态数据字典
+               visibleOptions: [],
+               // 菜单状态数据字典
+               statusOptions: [],
+               // 查询参数
+               queryParams: {
+                 menuName: undefined,
+                 visible: undefined
+               },
+               // 表单参数
+               form: {},
+               // 表单校验
+               rules: {
+                 menuName: [
+                   { required: true, message: "菜单名称不能为空", trigger: "blur" }
+                 ],
+                 orderNum: [
+                   { required: true, message: "菜单顺序不能为空", trigger: "blur" }
+                 ],
+                 path: [
+                   { required: true, message: "路由地址不能为空", trigger: "blur" }
+                 ]
+               },
+				 input1:'',
+				 lablist:[],
+				 defaultProps: {
+				          children: 'children',
+				          label: 'menuName'
+				        }
+			 }
+		 },
+		   watch: {
+		       jueseText(val) {
+		         this.$refs.tree.filter(val);
+		       }
+		     },
+
+		     methods: {
+           // 表单重置
+               reset() {
+                 this.form = {
+                   menuId: undefined,
+                   parentId: 0,
+                   menuName: undefined,
+                   icon: undefined,
+                   menuType: "M",
+                   orderNum: undefined,
+                   isFrame: "1",
+                   visible: "0",
+                   status: "0"
+                 };
+                 this.resetForm("form");
+               },
+               /** 查询菜单列表 */
+                   getList() {
+                     this.loading = true;
+                     listMenu(this.queryParams).then(response => {
+                       this.menuList = this.handleTree(response.data, "menuId");
+                       this.loading = false;
+                       console.log( "菜单列表数据" , response)
+                     });
+                   },
+		       // filterNode(value, data) {
+		       //   if (!value) return true;
+		       //   return data.label.indexOf(value) !== -1;
+		       // },
+           /** 查询菜单下拉树结构 */
+               getTreeselect() {
+                 listMenu().then(response => {
+                   this.menuOptions = [];
+                   const menu = { menuId: 0, menuName: '菜单列表', children: [] };
+                   menu.children = this.handleTree(response.data, "menuId");
+                   this.lablist.push(menu);
+
+                   console.log(menu)
+                 });
+               },
+               /** 新增按钮操作 */
+                   handleAdd(row) {
+                     this.reset();
+                     this.getTreeselect();
+                     if (row != null && row.menuId) {
+                       this.form.parentId = row.menuId;
+                     } else {
+                       this.form.parentId = 0;
+                     }
+                     this.open = true;
+                     this.title = "添加菜单";
+
+                   },
+                   /** 修改按钮操作 */
+                       handleUpdate(row) {
+                         this.reset();
+                         this.getTreeselect();
+                         getMenu(row.menuId).then(response => {
+                           this.form = response.data;
+                           this.open = true;
+                           this.title = "修改菜单";
+                         });
+                       },
+		     },
+         created() {
+             this.getList();
+             // 显示隐藏菜单
+             this.getDicts("sys_show_hide").then(res => {
+               this.visibleOptions = res.data;
+               console.log(res)
+             });
+             this.getDicts("sys_normal_disable").then(res => {
+               // 正常停用状态
+               this.statusOptions = res.data;
+               console.log(res)
+             });
+           },
+	   }
+</script>
+
+<style scoped="scoped">
+	.roleManagement_top {
+		background-image: linear-gradient(#5692cf, #00356c);
+		height: 40px;
+		width: 100%;
+		margin-top: -3px;
+		padding: 5px;
+	}
+
+	.roleManagement_top ul li {
+		float: left;
+		line-height: 28px;
+		color: white;
+		border: 1px solid #5681af;
+		font-size: 12px;
+		height: 28px;
+		width: 58px;
+		text-align: center;
+		border-radius: 5px;
+		background-image: linear-gradient(#71a1d2, #174f89);
+		cursor: pointer;
+	}
+	.roleManagement_conter {
+		background-color: #FFFFFF;
+		width: 100%;
+		height: 850px;
+		border: 1px solid #c0c0c0;
+		display: flex;
+    overflow: auto;
+	}
+	.conter_left{
+		width: 26%;
+		height: 100%;
+		border-right: 1px solid #b2b2b2;
+	}
+	.conter_right{
+		width: 74%;
+		height: 100%;
+
+	}
+	.conter_right ul li{
+		float: left;
+		margin-left: 20px;
+		margin-top: 10px;
+	}
+	.ulbottom{
+		margin-left: -16px;
+	}
+</style>
+<style>
+	.input1 .el-input__inner {
+		height: 20px;
+		padding-left: 5px;
+
+	}
+</style>

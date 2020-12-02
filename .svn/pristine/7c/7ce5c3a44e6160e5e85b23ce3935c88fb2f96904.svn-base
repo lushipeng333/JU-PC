@@ -1,0 +1,11 @@
+import request from '@/utils/request'
+import { praseStrEmpty } from "@/utils/ruoyi";
+
+// 查询列表
+export function listchangeFiles(query) {
+  return request({
+    url: '/project/changefiles/list',
+    method: 'get',
+    params: query
+  })
+}

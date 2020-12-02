@@ -1,0 +1,1024 @@
+<template>
+  <div class="project_buildinginfo">
+    <div class="project_buildinginfo_top">
+      <ul v-show="show">
+        <li @click="handleAdd">新增</li>
+        <li @click="handleUpdate" :class="{'notChoose' : single}" :disabled="single">修改</li>
+        <li @click="handleDelete" :class="{'notChoose' : multiple}" :disabled="multiple">删除</li>
+        <li @click="comparisons">对比</li>
+        <li @click="exportbuild">导出</li>
+        <li @click="handleImport">导入</li>
+        <li @click="revampWindowPattern">修改全部窗型</li>
+        <li @click="quickAdd" :class="{'notChoose' : single}" :disabled="single">快速添加</li>
+      </ul>
+      <ul v-show="!show">
+        <li @click="submitForm">保存</li>
+        <li @click="cancel">取消</li>
+      </ul>
+    </div>
+    <div class="project_buildinginfo_conter">
+      <!-- 添加或修改参数 -->
+      <el-form ref="form" :model="form" :rules="rules" label-width="130px" v-show="!show">
+        <div v-show="but" style="text-align: center;">
+          <el-button  @click="btnfloor">楼层(按楼层纵向添加)</el-button>
+          <el-button  @click="btnlocation">位置(按位置横向添加)</el-button>
+        </div>
+        <el-row>
+          <el-col :span="8">
+            <el-form-item label="项目名称" prop="projectId" v-if="add">
+              <el-select v-model="form.projectId" placeholder="请选择项目名称" @change="querywinNo"  :disabled="!add">
+                <el-option v-for="dict in projectNameList" :key="dict.projectId" :label="dict.projectName" :value="dict.projectId" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="项目名称" prop="projectId" v-else>
+              <el-select v-model="form.projectName" placeholder="请选择项目名称" @change="querywinNo"  :disabled="!add">
+                <el-option v-for="dict in projectNameList" :key="dict.projectId" :label="dict.projectName" :value="dict.projectId" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="楼号" prop="buildingNo">
+              <el-input v-model="form.buildingNo" placeholder="请输入楼号"  :disabled="!add" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="楼层" prop="floorNo">
+              <el-input v-model="form.floorNo" placeholder="请输入楼层"  :disabled="!floorSingle" v-show="!serial"/>
+              <el-input v-model="form.floorNo" placeholder="格式: 1或2-4或7,8,9"  :disabled="!floorSingle" v-show="serial"/>
+            </el-form-item>
+           <!-- <el-form-item label="楼层" v-if="">
+
+            </el-form-item> -->
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="8">
+            <el-form-item label="窗号" prop="winNo" >
+              <el-select v-model="form.winNo"  placeholder="请选择窗号" @change="querywinModelCode" :disabled="!add">
+                <el-option v-for="item in winNolist" :key="item.projectDetailId" :label="item.winNo" :value="item.winNo"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="位置说明" prop="directionComment">
+              <el-input v-model="form.directionComment" placeholder="请输入位置说明"  :disabled="!add"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="位置编号 " prop="openingDirection">
+              <el-input v-model="form.openingDirection" placeholder="请输入位置编码"  :disabled="!location" v-show="serial"/>
+              <el-input v-model="form.openingDirectionCode" placeholder="N,E,W,S" v-show="!serial" style="width: 30%; margin-right: 10px;"></el-input>
+              <el-input v-model="form.openingDirectionStart" placeholder="请输入起始编号" v-show="!serial" style="width: 30%; margin-right: 10px;"></el-input>
+              <el-input v-model="form.openingDirectionEnd" placeholder="请输入结束编号" v-show="!serial" style="width: 30%;"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+         <el-col :span="8">
+           <el-form-item label="窗型编号" prop="winModelId"  v-if="add">
+             <el-select v-model="form.winModelId"  placeholder="请输入窗型编号" :disabled="!add">
+               <el-option v-for="item in winModelCodelist" :key="item.winModelId" :label="item.winModelCode" :value="item.winModelId"></el-option>
+             </el-select>
+           </el-form-item>
+           <el-form-item label="窗型编号" prop="winModelId"  v-else>
+             <el-select v-model="form.winModelCode"  placeholder="请输入窗型编号" :disabled="!add">
+               <el-option v-for="item in winModelCodelist" :key="item.winModelId" :label="item.winModelCode" :value="item.winModelId"></el-option>
+             </el-select>
+           </el-form-item>
+         </el-col>
+          <el-col :span="8">
+            <el-form-item label="图纸尺寸(高/mm)" prop="drawingHeight">
+              <el-input v-model="form.drawingHeight" placeholder="请输入图纸尺寸"  :disabled="!quickadd"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="图纸尺寸(宽/mm)" prop="drawingWidth">
+              <el-input v-model="form.drawingWidth" placeholder="请输入图纸尺寸"  :disabled="!quickadd"/>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="8">
+            <el-form-item label="楼层类别" prop="floorType" >
+              <el-select v-model="form.floorType"  placeholder="请选择楼层类别" >
+                <el-option v-for="dict in floorTypeOptions" :key="dict.dictValue" :label="dict.dictLabel" :value="dict.dictValue"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="洞口尺寸(宽/mm)" >
+              <el-input v-model="form.holeWidth" placeholder="请输入洞口尺寸"  :disabled="!quickadd"/>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="洞口尺寸(高/mm)">
+              <el-input v-model="form.holeHeight" placeholder="请输入洞口尺寸"  :disabled="!quickadd"/>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+      </el-form>
+      <div class="left" v-show="show">
+        <div class="left_bottom">
+          <div class="message">
+            <div class="messagenav">
+              快速查询
+            </div>
+          </div>
+          <div class="messageli">
+            <el-form :model="queryParams" ref="queryForm" :inline="true" label-width="68px">
+              <el-form-item label="项目名称">
+                <el-select v-model="queryParams.projectId"  placeholder="请选择" size="mini" @change="buildingNolist" clearable>
+                  <el-option v-for="dict in projectNameList" :key="dict.projectId" :label="dict.projectName" :value="dict.projectId" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="楼号">
+                <el-select v-model="queryParams.buildingNo"  placeholder="请选择" size="mini" @change="floorNolist" clearable>
+                  <el-option v-for="dict in buildingNoList" :key="dict.buildingNo" :label="dict.buildingNo" :value="dict.buildingNo" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="楼层">
+                <el-select v-model="queryParams.floorNo"  placeholder="请选择" size="mini" clearable>
+                  <el-option v-for="dict in floorNoList" :key="dict.floorNo" :label="dict.floorNo" :value="dict.floorNo" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="窗号:" prop="winNo ">
+                <el-input clearable v-model="queryParams.winNo " placeholder="请输入窗号"  size="mini" style="width: 100%"
+                  @keyup.enter.native="handleQuery" />
+              </el-form-item>
+              <el-form-item label="位置编码:" prop="openingDirection ">
+                <el-input clearable v-model="queryParams.openingDirection " placeholder="请输入位置编码"  size="mini" style="width: 100%"
+                  @keyup.enter.native="handleQuery" />
+              </el-form-item>
+              <el-form-item label="窗型编号:" prop="winModelCode ">
+                <el-input clearable v-model="queryParams.winModelCode " placeholder="请输入窗型编号"  size="mini" style="width: 100%"
+                  @keyup.enter.native="handleQuery" />
+              </el-form-item>
+              <el-form-item label="楼层类别" prop="floorType" >
+                <el-select v-model="queryParams.floorType"  placeholder="请选择楼层类别" size="mini" clearable>
+                  <el-option v-for="dict in floorTypeOptions" :key="dict.dictValue" :label="dict.dictLabel" :value="dict.dictValue"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="cyan" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+                <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+        </div>
+      </div>
+      <div class="right" v-show="show">
+        <div class="rigtop">
+          查询结果
+        </div>
+        <el-table
+        :data="buildinginfoList"
+         @selection-change="handleSelectionChange"
+          height="100%" ref="multipleTable"
+          max-height="100%"
+          :row-style="{height:'35px'}"
+          :cell-style="{padding:'0px'}"
+          :header-cell-style="{padding:'0px'}"
+          highlight-current-row
+          border>
+          <el-table-column type="selection" width="50" align="center" />
+          <el-table-column label="序号" align="center" type="index" />
+          <el-table-column label="项目名称" align="center" prop="projectName" :show-overflow-tooltip="true" />
+          <el-table-column label="楼号" :render-header="renderHeader" align="center" prop="buildingNo" :show-overflow-tooltip="true" />
+          <el-table-column label="楼层" :render-header="renderHeader" align="center" prop="floorNo" :show-overflow-tooltip="true" />
+          <el-table-column label="窗号" :render-header="renderHeader" align="center" width="100" prop="winNo" />
+          <el-table-column label="窗型编号" :render-header="renderHeader" align="center" width="100" prop="winModelCode" :show-overflow-tooltip="true" />
+          <el-table-column label="窗型图片" align="center" prop="winModelPictureUrl" :show-overflow-tooltip="true" >
+          <template slot-scope="scope">
+            <el-popover
+                popper-class="pop-div-my"
+                placement="bottom"
+                width="200"
+                trigger="click"
+               >
+                <img  :src=" 'http://192.168.1.123:8080'+scope.row.winModelPictureUrl" alt="" >
+                <img slot="reference" :src=" 'http://192.168.1.123:8080'+scope.row.winModelPictureUrl" style="width: 30px;height: 30px">
+              </el-popover>
+               </template>
+          </el-table-column>
+          <el-table-column label="位置编码" :render-header="renderHeader" width="100" align="center" prop="openingDirection" :show-overflow-tooltip="true" />
+          <el-table-column label="位置说明" width="100" align="center" prop="directionComment" :show-overflow-tooltip="true" />
+          <el-table-column label="楼层类别" :render-header="renderHeader" width="100" align="center" prop="floorType" :show-overflow-tooltip="true" :formatter="floorTypeFormat" />
+          <el-table-column label="洞口数量" align="center" prop="holeNum" :show-overflow-tooltip="true" />
+          <el-table-column label="面积(M²)" align="center" prop="area" :show-overflow-tooltip="true" />
+          <el-table-column label="图纸尺寸(宽/mm)" width="150" align="center" prop="drawingWidth" :show-overflow-tooltip="true" />
+          <el-table-column label="图纸尺寸(高/mm)" width="150" align="center" prop="drawingHeight" :show-overflow-tooltip="true" />
+          <el-table-column label="洞口尺寸(宽/mm)" width="150" align="center" prop="holeWidth" :show-overflow-tooltip="true" />
+          <el-table-column label="洞口尺寸(高/mm)" width="150" align="center" prop="holeHeight" :show-overflow-tooltip="true" />
+          <el-table-column label="创建人" align="center" prop="createBy" :show-overflow-tooltip="true" />
+        </el-table>
+        <!-- <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize"
+          @pagination="getList" /> -->
+      </div>
+    </div>
+    <!-- 用户导入对话框 -->
+        <el-dialog :title="upload.title" :visible.sync="upload.open" width="400px" append-to-body>
+          <el-select v-model="upload.data.projectId"  placeholder="请选择" size="mini">
+            <el-option v-for="dict in projectNameList" :key="dict.projectId" :label="dict.projectName" :value="dict.projectId" />
+          </el-select>
+          <el-upload
+            ref="upload"
+            :limit="1"
+            accept=".xlsx, .xls"
+            :headers="upload.headers"
+            :action="upload.url + '?updateSupport=' + upload.updateSupport"
+            :disabled="upload.isUploading"
+            :on-progress="handleFileUploadProgress"
+            :on-success="handleFileSuccess"
+            :auto-upload="false"
+            :data="upload.data"
+            drag
+
+          >
+            <i class="el-icon-upload"></i>
+            <div class="el-upload__text">
+              将文件拖到此处，或
+              <em>点击上传</em>
+            </div>
+            <div class="el-upload__tip" slot="tip">
+              <el-link type="info" style="font-size:12px" @click="importTemplate">下载模板</el-link>
+            </div>
+            <div class="el-upload__tip" style="color:red" slot="tip">提示：仅允许导入“xls”或“xlsx”格式文件！</div>
+          </el-upload>
+          <div slot="footer" class="dialog-footer">
+            <el-button type="primary" @click="submitFileForm">确 定</el-button>
+            <el-button @click="upload.open = false">取 消</el-button>
+          </div>
+        </el-dialog>
+        <!-- 修改全部窗型 -->
+        <el-dialog :title="title" :visible.sync="window" width="600px" append-to-body>
+          <el-form ref="windowPatternform" :model="windowPatternform" label-width="100px">
+            <el-row>
+              <el-col>
+                <el-form-item label="项目名称" prop="projectId">
+                  <el-select v-model="windowPatternform.projectId" placeholder="请选择项目名称" @change="querywinNo" >
+                    <el-option v-for="dict in projectNameList" :key="dict.projectId" :label="dict.projectName" :value="dict.projectId" />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              </el-row>
+              <el-row>
+              <el-col>
+                <el-form-item label="窗号" prop="winNo" >
+                  <el-select v-model="windowPatternform.winNo"  placeholder="请选择窗号" @change="querywinModelCodeAll">
+                    <el-option v-for="item in winNolist" :key="item.projectDetailId" :label="item.winNo" :value="item.winNo"></el-option>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row>
+              <el-col>
+               <el-form-item label="窗型编号" prop="winModelId"   >
+                 <el-select v-model="windowPatternform.winModelId"  placeholder="请输入窗型编号" >
+                   <el-option v-for="item in winModelCodelistAll" :key="item.winModelId" :label="item.winModelCode" :value="item.winModelId"></el-option>
+                 </el-select>
+               </el-form-item>
+              </el-col>
+            </el-row>
+          </el-form>
+          <div slot="footer" class="dialog-footer">
+            <el-button type="primary" @click="submitwindow">确 定</el-button>
+            <el-button @click="cancel">取 消</el-button>
+          </div>
+        </el-dialog>
+        <!-- 对比 -->
+            <el-dialog :title="title" :visible.sync="contrast" append-to-body>
+              <el-table :data="contrastList" height="500">
+                <el-table-column label="序号" align="center" type="index" />
+                <el-table-column label="窗号" align="center" width="120" prop="winNo" />
+                <el-table-column label="项目数量" align="center" prop="projectNum" :show-overflow-tooltip="true" />
+                <el-table-column label="窗户详细信息" align="center" prop="holeNum" :show-overflow-tooltip="true" />
+                <el-table-column label="差值" align="center" prop="diffValue" :show-overflow-tooltip="true" />
+
+              </el-table>
+              <div slot="footer" class="dialog-footer">
+            <el-button type="primary" @click="submitcontrast">确 定</el-button>
+            <el-button @click="cancel">取 消</el-button>
+          </div>
+
+            </el-dialog>
+          <el-dialog :title="title" :visible.sync="projectsearch" width="600px" append-to-body :close-on-click-modal="false">
+            <el-form ref="queryParams" :model="queryParams" label-width="120px">
+              <el-row>
+                <el-col>
+                  <el-form-item :label="labeldetail + ':'" >
+                    <el-input v-show="floorTypeshow" v-model="search" :placeholder=' "请输入" + labeldetail ' ></el-input>
+                      <el-select v-model="search"  placeholder="请选择楼层类别" v-show="!floorTypeshow">
+                        <el-option v-for="dict in floorTypeOptions" :key="dict.dictValue" :label="dict.dictLabel" :value="dict.dictValue"></el-option>
+                      </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+              <el-button type="primary" @click="submitdetail">确 定</el-button>
+              <el-button @click="cancel">取 消</el-button>
+            </div>
+          </el-dialog>
+  </div>
+</template>
+
+<script>
+  import {
+    listBuildinginfo,
+    getProject,
+    findList,
+    wiNofindList,
+    addbuildinginfo,
+    getProjectBuildinginfoById,
+    buildinginfoEdit,
+    removebuildinginfo,
+    exportbuildinginfo,
+    buildingNofindList,
+    importTemplate,
+    updateAllwindow,
+    Allwindow,
+    copyDataAdd,
+    comparison
+  } from "@/api/project/project_buildinginfo.js";
+  import { getToken } from "@/utils/auth";
+  export default {
+    name: 'buildinginfo',
+    data() {
+      return {
+        // 楼层类别弹出框
+        floorTypeshow:true,
+        // 合并对象
+        merge:{},
+        searchdetailform:{},
+        // 获取到的id
+        projectid: undefined,
+        // 搜索弹出框表头
+        labeldetail: undefined,
+        // 查询输入框内容
+        search: '',
+        // 搜索弹出框是否展示
+        projectsearch: false,
+        // 对比数据
+        contrastList:[],
+        // 对比弹出框
+        contrast:false,
+        // 判断是否快速添加
+        queryaddform:true,
+        // 0 楼层 1 位置
+        flag:"0",
+        serial:true,
+        // 单个楼层禁用
+        floorSingle:false,
+        // 按钮显示
+        but:false,
+        // 位置编号禁用
+        location:true,
+        quickadd:true,
+        // 弹出层标题
+        title:'',
+        // 修改窗型弹出
+        window:false,
+        // 用户导入参数
+              upload: {
+                // 是否显示弹出层（用户导入）
+                open: false,
+                // 弹出层标题（用户导入）
+                title: "",
+                // 是否禁用上传
+                isUploading: false,
+                // 是否更新已经存在的用户数据
+                updateSupport: 0,
+                // 设置上传的请求头部
+                headers: { Authorization: "Bearer " + getToken() },
+                // 上传的地址
+                url: process.env.VUE_APP_BASE_API + "/project/buildinginfo/importData",
+                data:{
+                  projectId:undefined
+                }
+              },
+        // 楼号数据
+        buildingNoList: [],
+        // 楼层数据
+        floorNoList: [],
+        add: false,
+        // 选中数据
+        selectProject: [],
+        // 选中id
+        ids: [],
+        // 非单个禁用
+        single: true,
+        // 非多个禁用
+        multiple: true,
+        show: true,
+        // 总条数
+        total: 0,
+        // 楼层类别字典数据
+        floorTypeOptions: [],
+        // 修改楼层数据
+        floorvalue:'',
+        // 窗号数据
+        winNolist: [],
+        // 窗型编号数据
+        winModelCodelist: [],
+        // 所有窗号数据
+        winModelCodelistAll:[],
+        // 列表数据
+        buildinginfoList: [],
+        // 项目名称数组
+        projectNameList: [],
+        // 选中项目名称数组
+        projectname: [],
+        // 表单参数
+        form: {},
+        flagelem :true,
+        // 表单校验
+        rules: {
+          projectId: [{
+            required: true,
+            message: "项目名称不能为空",
+            trigger: "blur"
+          }, ],
+          buildingNo: [{
+            required: true,
+            message: "楼号不能为空",
+            trigger: "blur"
+          }, ],
+          floorNo: [{
+            required: true,
+            message: "楼层不能为空",
+            trigger: "blur"
+          }, ],
+          winNo: [{
+            required: true,
+            message: "窗号不能为空",
+            trigger: "blur"
+          }, ],
+          winModelId: [{
+            required: true,
+            message: "窗型编号不能为空",
+            trigger: "blur"
+          }, ],
+          openingDirection: [{
+            required: true,
+            message: "位置编码不能为空",
+            trigger: "blur"
+          }, ],
+          directionComment: [{
+            required: true,
+            message: "位置说明不能为空",
+            trigger: "blur"
+          }, ],
+          floorType: [{
+            required: true,
+            message: "楼层类别不能为空",
+            trigger: "blur"
+          }, ],
+          drawingWidth: [{
+            required: true,
+            message: "图纸尺寸/宽不能为空",
+            trigger: "blur"
+          }, ],
+          drawingHeight: [{
+            required: true,
+            message: "图纸尺寸/高不能为空",
+            trigger: "blur"
+          }, ],
+        },
+        // 修改窗型
+        windowPatternform:{},
+        // 查询参数
+        queryParams: {
+          pageNum: 1,
+          pageSize: 20,
+          projectId: undefined,
+          buildingNo: undefined,
+          floorNo: undefined,
+          winNo: undefined,
+          openingDirection: undefined,
+          floorType:undefined,
+          winModelCode:undefined
+        },
+      }
+    },
+    created() {
+
+      this.getDicts("floor_type").then(response => {
+        this.floorTypeOptions = response.data;
+      })
+      getProject().then(res => {
+        this.projectNameList = res.data;
+
+      })
+    },
+    methods: {
+      // 表单重置
+      reset() {
+        this.form = {
+          openingDirectionStart  :undefined,   //起始编码
+          openingDirectionEnd  :undefined,   //结束编码
+          openingDirectionCode :undefined,   //位置方向
+          projectName: undefined,
+          projectId: undefined, //项目ID
+          projectDetailId: undefined, // 项目详情id
+          buildingNo: undefined, //楼号
+          floorNo: undefined, // 楼层
+          winModelCode: undefined, // 窗型编号
+          winNo: undefined, //窗号
+          openingDirection: undefined, // 位置编码
+          directionComment: undefined, // 位置说明
+          floorType: undefined, // 楼层类别
+          drawingWidth: undefined, // 图纸尺寸
+          drawingHeight: undefined, // 图纸尺寸
+          holeWidth: undefined, // 洞口宽度
+          holeHeight: undefined, //洞口高度
+        };
+        this.resetForm("form");
+      },
+      windowform(){
+        this.windowPatternform = {
+          projectId:undefined,
+          winNo:undefined,
+          winModelId:undefined
+        };
+         this.resetForm("windowPatternform");
+      },
+      getList() {
+        listBuildinginfo(this.queryParams).then(response => {
+          this.buildinginfoList = response.rows
+          this.total = response.total;
+          this.buildinginfoList.forEach(function(item ,index){
+            item.area = ((item.drawingWidth * item.drawingHeight) / Math.pow(10,6)).toFixed(2)
+          })
+        })
+      },
+      // 选中项目名称查看窗号
+      querywinNo(val) {
+        let aaa = {
+          projectId: val
+        }
+        findList(aaa).then(res => {
+          this.winNolist = res.data
+        })
+      },
+      // 选中窗号查看窗型编号
+      querywinModelCode(value) {
+        let obj = {};
+        obj = this.winNolist.find((item) => { // 这里的testOptions就是上面遍历的测试源
+          return item.winNo === value; // 筛选出匹配数据
+        });
+        // console.log('全部数据', obj)
+        let objproject = {
+          projectDetailId: obj.projectDetailId
+        }
+        wiNofindList(objproject).then(res => {
+
+            this.winModelCodelist = res
+
+        })
+      },
+      // 所有窗号查询
+      querywinModelCodeAll(){
+        Allwindow().then(res =>{
+
+          this.winModelCodelistAll = res.rows
+        })
+      },
+      // 楼层类别字典查询
+      floorTypeFormat(row, column) {
+        return this.selectDictLabel(this.floorTypeOptions, row.floorType);
+      },
+      /** 重置按钮操作 */
+      resetQuery() {
+        this.queryParams = {
+            pageNum: 1,
+            pageSize: 20,
+            projectId: undefined,
+            buildingNo: undefined,
+            floorNo: undefined,
+            winNo: undefined,
+            openingDirection: undefined
+          },
+          this.getList()
+      },
+      handleSelectionChange(selection) {
+        this.selectProject = selection.map((item) => item)
+        this.ids = selection.map((item) => item.id);
+        this.single = selection.length != 1;
+        this.multiple = !selection.length;
+        this.projectname = selection.map(item => item.projectName)
+      },
+      // 新增按钮
+      handleAdd() {
+        this.reset()
+        this.show = false
+        this.add = true
+        this.location = true
+        this.quickadd = true
+        this.floorSingle = true
+      },
+      // 修改按钮
+      handleUpdate() {
+        this.show = false
+        this.add = false
+        this.location = false
+        this.quickadd = true
+        this.floorSingle = false
+        getProjectBuildinginfoById(this.ids[0]).then(res => {
+          this.form = res.data
+
+        })
+      },
+      // 快速添加
+      quickAdd(){
+        this.queryaddform = false
+         this.show = false
+         this.add = false
+         this.quickadd = false
+         this.location = false
+         this.but = true
+         this.floorSingle = true
+         getProjectBuildinginfoById(this.ids[0]).then(res => {
+           this.form = res.data
+          this.floorvalue = res.data.floorNo
+         })
+         console.log(this.floorvalue )
+      },
+      // 点击位置
+      btnlocation(){
+        this.flag = "1"
+        this.floorSingle = false
+        this.serial = false
+        this.form.floorNo = this.floorvalue
+      },
+       // 点击楼层
+      btnfloor(){
+        this.flag = "0"
+        this.floorSingle = true
+        this.serial = true
+      },
+      // 对比
+      comparisons(){
+        if(this.queryParams.projectId == undefined){
+           this.$message.error("请先选择项目")
+        }else{
+          this.contrast = true
+        const projectId = {
+          projectId:this.queryParams.projectId
+        }
+        comparison(projectId).then(res =>{
+          this.contrastList = res.data
+        })
+        this.title = "对比信息"
+        console.log(this.queryParams)
+        }
+
+      },
+      // 取消
+      cancel() {
+        this.search = ""
+        this.floorTypeshow = true
+        this.searchdetailform = {}
+        this.projectsearch = false
+        this.show = true
+        this.window = false
+        this.but = false
+        this.location = true
+        this.quickadd = true
+        this.floorSingle = true
+        this.contrast = false
+        this.reset()
+        this.windowform()
+      },
+      submitcontrast(){
+        this.contrast = false
+      },
+      // 删除
+      handleDelete() {
+        const Id = this.ids;
+        this.$confirm('是否确认删除项目名称为"' + this.projectname + '"的数据项?', "警告", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        }).then(res => {
+          removebuildinginfo(Id).then(res => {
+            this.getList();
+            this.msgSuccess("删除成功");
+          })
+
+        }).catch(function() {});
+      },
+      // 获取楼号
+      buildingNolist(val) {
+        let projectId = {
+          projectId: val
+        }
+        buildingNofindList(projectId).then(res => {
+          this.buildingNoList = res.data
+        })
+      },
+      // 获取楼层
+      floorNolist(val) {
+        let query = {
+          projectId: this.queryParams.projectId,
+          buildingNo: val
+        }
+        buildingNofindList(query).then(res => {
+          this.floorNoList = res.data
+        })
+      },
+      // 导出
+      exportbuild() {
+        const queryParams = this.queryParams;
+              this.$confirm("是否确认导出窗户详细", "警告", {
+                  confirmButtonText: "确定",
+                  cancelButtonText: "取消",
+                  type: "warning"
+                }).then(function() {
+                  return exportbuildinginfo(queryParams);
+                }).then(response => {
+                  this.download(response.msg);
+                })
+      },
+      // 导入
+      handleImport(){
+        this.upload.title = "用户导入";
+            this.upload.open = true;
+      },
+      /** 下载模板操作 */
+          importTemplate() {
+            importTemplate().then(response => {
+              this.download(response.msg);
+            });
+          },
+          // 文件上传中处理
+          handleFileUploadProgress(event, file, fileList) {
+            this.upload.isUploading = true;
+          },
+          // 文件上传成功处理
+          handleFileSuccess(response, file, fileList) {
+            this.upload.open = false;
+            this.upload.isUploading = false;
+            this.$refs.upload.clearFiles();
+            this.$alert(response.msg, "导入结果", { dangerouslyUseHTMLString: true });
+            this.getList();
+          },
+          // 提交上传文件
+          submitFileForm() {
+            this.$refs.upload.submit();
+          },
+          // 修改全部窗型
+          revampWindowPattern(){
+             this.window = true
+             this.title = '修改全部窗型'
+          },
+      // 保存
+      submitForm() {
+
+        this.$refs["form"].validate((valid) => {
+
+          if (valid) {
+
+            if (this.add == true && this.queryaddform == true) {
+              console.log("新增")
+              addbuildinginfo(this.form).then(res => {
+                this.getList()
+                this.reset()
+                this.$message("新增成功");
+                this.show = true
+              })
+            }
+            if(this.add == false && this.queryaddform == true){
+              console.log("修改")
+              this.form.id = this.ids[0]
+              buildinginfoEdit(this.form).then(res => {
+                this.getList()
+                this.reset()
+                this.$message("修改成功");
+                this.show = true
+              })
+            }
+             if(this.queryaddform == false){
+              copyDataAdd(this.form , this.flag)
+            }
+          }
+        })
+      },
+      // 修改窗号提交
+      submitwindow(){
+        const windowPatternform = this.windowPatternform
+        updateAllwindow(windowPatternform).then(res =>{
+          this.window = false
+          this.windowform()
+          if(res.code == 200){
+            this.msgSuccess("修改成功")
+          }
+          if(res.code == 500){
+            this.$message({
+                      message:res.msg,
+                      type: 'warning'
+                    });
+          }
+
+        })
+      },
+      // render 事件
+      renderHeader(h, {
+        column
+      }) {
+        return h(
+          'span',
+          [
+            h('span', column.label),
+            h('i', {
+              class: 'iconfont icon-sousuo',
+              style: ' margin-left: 0.325rem;margin-right: 0.325rem;',
+              on: {
+                click: () => {
+
+                    // this.searchdetailform  = this.queryParams
+                    this.labeldetail = column.label
+                    this.projectsearch = true
+                    this.title = column.label + "查询"
+                    if(column.label == "楼层类别"){
+                      this.floorTypeshow = false
+                    }
+                }
+              }
+            })
+          ],
+        );
+                           let l = column.label.length
+                           let f = 16 //每个字大小，其实是每个字的比例值，大概会比字体大小差不多大一点，
+                           column.minWidth = f*(1+1) //字大小乘个数即长度 ,注意不要加px像素，这里minWidth只是一个比例值，不是真正的长度
+        　　　　　　　　　　　　//然后将列标题放在一个div块中，注意块的宽度一定要100%，否则表格显示不完全
+                          return h('div',{class:'table-head',style:{width:'100%'}},[column.label])
+      },
+      // 提交查询详细列表
+      submitdetail() {
+        this.floorTypeshow = true
+        this.queryParams.pageNum = 1
+        this.buildinginfoList = []
+        this.queryParams.winNo = ''
+        this.queryParams.floorNo = ''
+        this.queryParams.buildingNo = ''
+        this.queryParams.winModelCode = ''
+        this.queryParams.openingDirection = ''
+        this.queryParams.floorType = ''
+        if (this.labeldetail == "窗号") {
+          this.queryParams.winNo = this.search
+        } else if (this.labeldetail == "楼层") {
+          this.queryParams.floorNo = this.search
+        } else if (this.labeldetail == "楼号") {
+          this.queryParams.buildingNo = this.search
+        } else if (this.labeldetail == "窗型编号") {
+          this.queryParams.winModelCode = this.search
+        } else if (this.labeldetail == "位置编码") {
+          this.queryParams.openingDirection = this.search
+        } else if (this.labeldetail == "楼层类别") {
+          this.queryParams.floorType = this.search
+        }
+        listBuildinginfo(this.queryParams).then(res => {
+          this.buildinginfoList = res.rows
+          this.total = res.total;
+          this.buildinginfoList.forEach(function(item ,index){
+            item.area = ((item.drawingWidth * item.drawingHeight) / Math.pow(10,6)).toFixed(2)
+          })
+          this.projectsearch = false
+          this.search = ''
+        })
+      },
+      /** 搜索按钮操作 */
+      handleQuery() {
+        this.queryParams.pageNum = 1
+        this.buildinginfoList = []
+        console.log(this.merge)
+       listBuildinginfo(this.queryParams).then(response => {
+         this.buildinginfoList = response.rows
+         this.total = response.total;
+         this.buildinginfoList.forEach(function(item ,index){
+           item.area = ((item.drawingWidth * item.drawingHeight) / Math.pow(10,6)).toFixed(2)
+         })
+       })
+      },
+
+    },
+    mounted() {
+      this.$refs.multipleTable.bodyWrapper.addEventListener('scroll', (res) => {
+          let height = res.target;
+          // 可视高度
+          let clientHeight = height.clientHeight;
+          // 滚动距离
+          let scrollTop = height.scrollTop;
+          // 滚动条总高度
+          let scrollHeight = height.scrollHeight;
+          if(clientHeight + scrollTop == scrollHeight){
+           // let searchQuery= {
+           //   // 每次请求数据条数
+           //     pageSize:20,
+           //    // 请求数据页数
+           //     pageNum:this.queryParams.pageNum += 1
+           //   }
+            this.queryParams.pageNum += 1
+            // 一共多少页数据
+            let pages =  Math.ceil(this.total / this.queryParams.pageSize)
+            if(this.queryParams.pageNum > pages){
+              return
+            }
+           listBuildinginfo(this.queryParams).then(res =>{
+             this.buildinginfoList = this.buildinginfoList.concat(res.rows)
+              // console.log(this.buildinginfoList)
+           })
+          }
+
+      },true);
+    }
+  }
+</script>
+
+<style scoped="scoped">
+  /* 删除修改按钮是否操作 */
+  .notChoose {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .project_buildinginfo {
+    width: 100%;
+    height: 87%;
+  }
+
+  .project_buildinginfo_top {
+    background-image: linear-gradient(#5692cf, #00356c);
+    height: 40px;
+    width: 100%;
+    padding: 5px;
+  }
+
+  .project_buildinginfo_top ul li {
+    float: left;
+    line-height: 28px;
+    color: white;
+    border: 1px solid #5681af;
+    font-size: 0.75rem;
+    height: 28px;
+    min-width: 58px;
+    text-align: center;
+    border-radius: 5px;
+    background-image: linear-gradient(#71a1d2, #174f89);
+    cursor: pointer;
+    margin-left: 5px;
+  }
+
+  .project_buildinginfo_conter {
+    background-color: #FFFFFF;
+    width: 100%;
+    height: 100%;
+    border: 1px solid #c0c0c0;
+    display: flex;
+  }
+
+  .left {
+    width: 16%;
+    height: 100%;
+    background-color: #efefef;
+    font-size: 0.875rem;
+  }
+
+  .left_bottom {
+    width: 100%;
+    height: 40%;
+  }
+
+  .message {
+    width: 100%;
+    height: 30px;
+    line-height: 30px;
+    font-size: 0.75rem;
+    background-image: linear-gradient(#fdfdfe, #cfd0d1);
+    padding-left: 10px;
+    display: flex;
+    justify-content: space-between;
+    padding-right: 10px;
+
+  }
+
+  .messagenav {
+    color: #2a5b8c;
+    font-weight: 900;
+
+  }
+
+  .right {
+    width: 84%;
+    height: 94%;
+  }
+  .rigtop {
+    width: 100%;
+    height: 24px;
+    line-height: 24px;
+    background-image: linear-gradient(#ffffff, #e5e5e5);
+    font-size: 0.75rem;
+    color: #000000;
+  }
+</style>

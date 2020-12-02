@@ -1,0 +1,147 @@
+<template>
+	<div class="roleManagement">
+		<div class="roleManagement_top">
+			<ul>
+				<li>新增</li>
+				<li>修改</li>
+				<li>删除</li>
+			</ul>
+		</div>
+		<div class="roleManagement_conter">
+			<div class="conter_left">
+				<el-input
+				size="mini"
+				  placeholder="输入关键字进行过滤"
+				  v-model="jueseText">
+				</el-input>
+
+				<el-tree
+				  class="filter-tree"
+				  :data="data"
+				  :props="defaultProps"
+				  default-expand-all
+				  :filter-node-method="filterNode"
+				  ref="tree">
+				</el-tree>
+
+			</div>
+			<div class="conter_right">
+				<div>
+					<ul>
+					<li>
+						<span>菜单名称</span> &nbsp; &nbsp;
+						<el-input v-model="input1" size="mini" style="width: 200px;" class="input1"></el-input>
+					</li>
+					<li>
+						<span>状态</span> &nbsp; &nbsp;
+						<el-input v-model="input1" size="mini" style="width: 200px;" class="input1"></el-input>
+					</li>
+				</ul>
+				</div>
+				
+
+			</div>
+		</div>
+	</div>
+</template>
+
+<script>
+	 export default {
+		 name:"roleManagement",
+		 data(){
+			 return{
+				 input1:'',
+				 jueseText:'',
+				 data:[{
+					 id:1,
+					 label:'菜单管理',
+					 children:[{
+						 id:2,
+						 label:'业务管理'
+					 },
+					 {
+						id:3,
+						label:'权限管理'
+					 },
+					 {
+						 id:4,
+						 label:'菜单管理'
+					 }],
+
+				 }],
+				 defaultProps: {
+				          children: 'children',
+				          label: 'label'
+				        }
+			 }
+		 },
+		   watch: {
+		       jueseText(val) {
+		         this.$refs.tree.filter(val);
+		       }
+		     },
+
+		     methods: {
+		       filterNode(value, data) {
+		         if (!value) return true;
+		         return data.label.indexOf(value) !== -1;
+		       }
+		     },
+	   }
+</script>
+
+<style scoped="scoped">
+	.roleManagement_top {
+		background-image: linear-gradient(#5692cf, #00356c);
+		height: 40px;
+		width: 100%;
+		margin-top: -3px;
+		padding: 5px;
+	}
+
+	.roleManagement_top ul li {
+		float: left;
+		line-height: 28px;
+		color: white;
+		border: 1px solid #5681af;
+		font-size: 12px;
+		height: 28px;
+		width: 58px;
+		text-align: center;
+		border-radius: 5px;
+		background-image: linear-gradient(#71a1d2, #174f89);
+		cursor: pointer;
+	}
+	.roleManagement_conter {
+		background-color: #FFFFFF;
+		width: 100%;
+		height: 850px;
+		border: 1px solid #c0c0c0;
+		display: flex;
+	}
+	.conter_left{
+		width: 26%;
+		height: 100%;
+		border-right: 1px solid #b2b2b2;
+	}
+	.conter_right{
+		width: 74%;
+		height: 100%;
+
+	}
+	.conter_right ul li{
+		float: left;
+		margin-left: 20px;
+		margin-top: 10px;
+	}
+	.ulbottom{
+		margin-left: -16px;
+	}
+</style>
+<style>
+	.input1 .el-input__inner {
+		height: 20px;
+		padding-left: 5px;
+
+	}
+</style>

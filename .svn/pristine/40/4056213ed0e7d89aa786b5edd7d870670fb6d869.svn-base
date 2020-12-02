@@ -1,0 +1,92 @@
+<template>
+	<div class="often">
+		<div class="right">
+			<div class="right_top">
+				<div class="message">
+					<div>
+						消息中心看板
+						  <!-- 常用功能 -->
+					</div>
+					<div>
+						<Icon type="md-refresh-circle" />
+					</div>
+				</div>
+				<div class="messageli">
+					<ul>
+						<li><router-link to="/header/xiaoxi">通知消息</router-link></li>
+						<li><router-link to="/header/xiaoxi">工作任务</router-link></li>
+						<li><router-link to="/header/xiaoxi">预警消息</router-link></li>
+					</ul>
+				</div>
+				
+			</div>
+			<div class="right_bottom">
+				<div class="message">
+					<div>
+						我的报表看板
+					</div>
+					<div>
+						<Icon type="md-refresh-circle" />
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</template>
+
+<script>
+	export default {
+		name: "often"
+	}
+</script>
+
+<style scoped="scoped">
+	.often {
+		width: 100%;
+		height: 100%;
+	}
+
+	.right {
+		background: #ededef;
+		width: 200px;
+		height: 100%;
+		position: absolute;
+		right: 0;
+	}
+	.right_top{
+		width: 100%;
+		height: 50%;
+		
+		
+	}
+	.message{
+		width: 100%;
+		height: 30px;
+		line-height: 30px;
+		font-size: 12px;
+		color: #405a7a;
+		background-image: linear-gradient(#fdfdfe , #cfd0d1);
+		padding-left: 10px;
+		display: flex;
+		justify-content: space-between;
+		padding-right: 10px;
+		
+	}
+	.message i{
+		font-size: 20px;
+		color: #949199;
+	}
+	.messageli{
+		
+	}
+	.messageli ul li{
+		margin-left: 10px;
+		margin-top: 20px;
+		font-size: 14px;
+	
+	}
+	a{
+	color: #2a5a8d;
+	font-weight: 900;
+	}
+</style>

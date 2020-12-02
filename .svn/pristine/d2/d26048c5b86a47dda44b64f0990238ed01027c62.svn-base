@@ -1,0 +1,249 @@
+<template>
+  <div class="mes_project">
+       <div class="mes_project_top">
+         <ul>
+           <li>新增</li>
+           <li>修改</li>
+           <li>删除</li>
+           <li>状态维护</li>
+           <li>指派项目负责人</li>
+           <li>指派安装组</li>
+           <li>审核</li>
+           <li>导入</li>
+           <li>提交审核</li>
+           <li>添加详情</li>
+         </ul>
+       </div>
+       <div class="mes_project_conter">
+         <div class="conter_left">
+           <div class="message">
+             <div class="messagenav">
+               快速查询
+             </div>
+           </div>
+           <el-form :model="queryParams" ref="queryForm" :inline="true">
+              <el-form-item label="项目名称">
+             <el-select v-model="value" placeholder="请选择">
+                 <el-option
+                   v-for="item in options"
+                   :key="item.value"
+                   :label="item.label"
+                   :value="item.value">
+                 </el-option>
+               </el-select>
+                 </el-form-item>
+                <el-form-item label="项目状态">
+               <el-select v-model="value" placeholder="请选择">
+                   <el-option
+                     v-for="item in options"
+                     :key="item.value"
+                     :label="item.label"
+                     :value="item.value">
+                   </el-option>
+
+                 </el-select>
+                   </el-form-item>
+                    <el-form-item label="项目负责人">
+                 <el-select v-model="value" placeholder="请选择">
+                     <el-option
+                       v-for="item in options"
+                       :key="item.value"
+                       :label="item.label"
+                       :value="item.value">
+                     </el-option>
+                   </el-select>
+                     </el-form-item>
+             <el-form-item>
+               <el-button type="cyan" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+               <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+             </el-form-item>
+           </el-form>
+         </div>
+         <div class="conter_right">
+           <div class="right_top">
+              <el-table :data="roleList" @selection-change="handleSelectionChange">
+                <el-table-column type="selection" align="center" />
+                <el-table-column label="序号" type="index" />
+                <el-table-column label="项目名称 " prop="roleName" :show-overflow-tooltip="true" />
+                <el-table-column label="项目负责人" prop="roleKey" :show-overflow-tooltip="true" />
+                 <el-table-column label="指派安装组" prop="roleKey" :show-overflow-tooltip="true" />
+                  <el-table-column label="开始日期" align="center" prop="createTime">
+                    <template slot-scope="scope">
+                      <span>{{ parseTime(scope.row.createTime) }}</span>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="交付日期" align="center" prop="createTime">
+                    <template slot-scope="scope">
+                      <span>{{ parseTime(scope.row.createTime) }}</span>
+                    </template>
+                  </el-table-column>
+                   <el-table-column label="创建人" prop="roleKey" :show-overflow-tooltip="true" />
+                    <el-table-column label="创建日期" align="center" prop="createTime">
+                      <template slot-scope="scope">
+                        <span>{{ parseTime(scope.row.createTime) }}</span>
+                      </template>
+                    </el-table-column>
+                <el-table-column label="项目状态" align="center">
+                  <template slot-scope="scope">
+                    <el-switch v-model="scope.row.status" active-value="0" inactive-value="1" @change="handleStatusChange(scope.row)"></el-switch>
+                  </template>
+                </el-table-column>
+                <el-table-column label="项目类型" prop="roleKey" :show-overflow-tooltip="true" />
+                <el-table-column label="审核人" prop="roleKey" :show-overflow-tooltip="true" />
+                <el-table-column label="审核日期" align="center" prop="createTime">
+                  <template slot-scope="scope">
+                    <span>{{ parseTime(scope.row.createTime) }}</span>
+                  </template>
+                </el-table-column>
+               <el-table-column label="驳回备注" prop="roleKey" :show-overflow-tooltip="true" />
+              </el-table>
+           </div>
+           <div class="right_bottom">
+              <el-table :data="roleList" @selection-change="handleSelectionChange">
+                <el-table-column type="selection" align="center" />
+                <el-table-column label="序号" type="index" />
+                <el-table-column label="窗号 " prop="roleName" :show-overflow-tooltip="true" />
+                <el-table-column label="甲方窗号" prop="roleKey" :show-overflow-tooltip="true" />
+                <el-table-column label="系列名称" prop="roleKey" :show-overflow-tooltip="true" />
+                <el-table-column label="数量" prop="roleKey" :show-overflow-tooltip="true" />
+                <el-table-column label="单樘暂估量(m²)" prop="roleKey" :show-overflow-tooltip="true" /> 
+                <el-table-column label="总暂估量(m²)" prop="roleKey" :show-overflow-tooltip="true" /> 
+                <el-table-column label="合同单价(元/m²)" prop="roleKey" :show-overflow-tooltip="true" /> 
+                <el-table-column label="创建时间" prop="roleKey" :show-overflow-tooltip="true" /> 
+              </el-table> 
+           </div>
+         </div>
+       </div>
+  </div>
+</template>
+
+<script>
+export default{
+   name:'mes_project',
+   data(){
+     return{
+       // 角色表格数据
+       roleList: [],
+       // 查询参数
+       queryParams: {
+         pageNum: 1,
+         pageSize: 10,
+         roleName: undefined,
+         roleKey: undefined,
+         status: undefined
+       },
+        options: [{
+                 value: '选项1',
+                 label: '黄金糕'
+               }, {
+                 value: '选项2',
+                 label: '双皮奶'
+               }, {
+                 value: '选项3',
+                 label: '蚵仔煎'
+               }, {
+                 value: '选项4',
+                 label: '龙须面'
+               }, {
+                 value: '选项5',
+                 label: '北京烤鸭'
+               }],
+               value: ''
+     }
+   },
+   methods:{
+     // 搜索
+     handleQuery(){
+
+     },
+     // 重置
+     resetQuery(){
+
+     },
+     // 多选框选中数据
+     handleSelectionChange(){
+
+     }
+   }
+}
+</script>
+
+<style scoped="scoped">
+  .mes_project{
+    width: 100%;
+    height: 100%;
+  }
+  .mes_project_top {
+    background-image: linear-gradient(#5692cf, #00356c);
+    height: 40px;
+    width: 100%;
+
+    padding: 5px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .mes_project_top ul li {
+    float: left;
+    line-height: 28px;
+    color: white;
+    border: 1px solid #5681af;
+    font-size: 12px;
+    height: 28px;
+    width: 58px;
+    text-align: center;
+    border-radius: 5px;
+    background-image: linear-gradient(#71a1d2, #174f89);
+    cursor: pointer;
+    margin-left: 5px;
+  }
+  .mes_project_top ul li:hover {
+    background-image: linear-gradient(#92bde5, #1f548b);
+  }
+  .mes_project_conter {
+    background-color: #FFFFFF;
+    width: 100%;
+    height: 100%;
+    border: 1px solid #c0c0c0;
+    display: flex;
+  }
+  .conter_left {
+    width: 18%;
+    height: 100%;
+    border-right: 1px solid #b2b2b2;
+    overflow: auto;
+    background-color: #efefef;
+    font-size: 14px;
+
+  }
+  .message {
+    width: 100%;
+    height: 30px;
+    line-height: 30px;
+    font-size: 12px;
+    background-image: linear-gradient(#fdfdfe, #cfd0d1);
+    padding-left: 10px;
+    display: flex;
+    justify-content: space-between;
+    padding-right: 10px;
+
+  }
+  .messagenav {
+    color: #2a5b8c;
+    font-weight: 900;
+
+  }
+  .conter_right {
+    width: 82%;
+    height: 100%;
+  }
+  .right_top{
+    width: 100%;
+    height: 40%;
+    border-bottom: 1px solid #b2b2b2;
+  }
+  .right_bottom{
+    width: 100%;
+    height: 60%;
+
+  }
+</style>

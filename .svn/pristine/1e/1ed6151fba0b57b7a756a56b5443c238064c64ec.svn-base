@@ -1,0 +1,122 @@
+<template>
+	<div class="navigation">
+		<div class="navigation_nav">
+		</div>
+		<div class="list">
+			<div class="list_one">
+				<ul>
+					<router-link :to="rt">
+						<li v-for="(item,index) in nav" :key="index" :class="{listHover:index === listNum }" @click="listClick(index)">
+							<svg class="icon icons" aria-hidden="true">
+								<use :xlink:href="item.meta.icon"></use>
+							</svg>
+							{{item.meta.title}}
+						</li>
+					</router-link>
+				</ul>
+			</div>
+			<div class="navigation_son">
+				<router-view></router-view>
+			</div>
+		</div>
+	</div>
+	</div>
+</template>
+<script src="./iconfont.js"></script>
+<script>
+  import { getRouters } from '@/api/menu'
+	export default {
+		name: 'navigation',
+		data() {
+			return {
+				modal10: false,
+				nav: [],
+				listNum: 0,
+				rt: '',
+			}
+		},
+		methods: {
+			listClick(index) {
+				this.listNum = index
+				if (index == 0) {
+					// this.$router.push("/navigation/supply")
+					this.rt = "/Home/header"
+				} else if (index == 1) {
+					this.rt = "/navigation/supply"
+					// this.$router.push({
+					// 	name: "often"
+					// })
+				}
+			},
+
+		},
+		created() {
+        getRouters()
+        .then(res => {
+               this.nav = res.data
+               console.log(this.nav)
+               })
+
+
+		}
+	}
+</script>
+
+<style scoped="scoped">
+	/* 字体图标 */
+	.icon {
+	  width: 1em;
+	  height: 1em;
+	  vertical-align: -0.15em;
+	  fill: currentColor;
+	  overflow: hidden;
+	}
+
+	/* 导航栏背景 */
+	.navigation_nav {
+		width: 100%;
+		height: 30px;
+		background-image: linear-gradient(#4886c5, #145494);
+    margin-top: -3px;
+	}
+
+	/* 内容 */
+	.list {
+			background-color: #FFFFFF;
+			width: 100%;
+			height: 100%;
+			border: 1px solid #c0c0c0;
+		    display: flex;
+			position: relative;
+	}
+
+	/* 左侧第一菜单栏 */
+	.list_one {
+		background-image: linear-gradient(#ebf8fb, #8ec9e9);
+		height: 850px;
+		width: 130px;
+		/* text-align: center;	 */
+	}
+
+	.list_one ul li {
+		width: 120px;
+		height: 30px;
+		font-size: 14px;
+		/* color: #3d6b99; */
+		margin-top: 10px;
+		margin-left: 10px;
+		line-height: 30px;
+		padding-left: 10px;
+		font-weight: bold;
+	}
+
+	 .listHover{
+		background-color: #FFFFFF;
+		border: 1px solid #c0c0c0;
+		border-radius: 20px 0 0 0;
+		color: red;
+		border-width: 1px 0px 1px 1px;
+
+	}
+
+</style>

@@ -1,0 +1,102 @@
+<template>
+	<div class="system">
+		<div class="system_list">
+			<h1>系统管理</h1>
+			<ul>
+				<!-- <router-link :to="rt"> -->
+						<li 
+						:class="{system_li:index === systemNum}"  
+						v-for="(item,index) in list1" :key="index"
+						@dblclick="systemdbClick(index)"
+						@click="systemClick(index)">
+						{{item.name}}
+						</li>
+				<!-- </router-link> -->
+			</ul>
+		</div>
+		
+	</div>
+</template>
+
+<script>
+	export default{
+		name:"system",
+		data(){
+			return{
+				list1:[
+					{name:'用户管理'},
+					{name:'角色管理'},
+					{name:'菜单管理'},
+					{name:'部门管理'},
+					{name:'字典管理'},
+					{name:'岗位管理'}
+				],
+				systemNum:0,
+				rt:''
+			}
+		},
+		methods:{
+			
+			systemClick(index){
+			
+				this.systemNum = index 
+				console.log(this.list1)
+				
+			},
+			systemdbClick(index){
+				this.systemNum = index
+				switch(index)
+				{
+					case 0 :
+					this.$router.push({name:"userControl"})
+					break;
+					case 1 :
+					this.$router.push({name:"roleManagement"})
+					break;
+					case 2 :
+					this.$router.push({name:"menuManagement"})
+					break;
+					case 3 :
+					this.$router.push({name:"department"})
+					break;
+					case 4 :
+					this.$router.push({name:"dictionaries"})
+					break;
+					case 5 :
+					this.$router.push({name:"postManagement"})
+					break;
+				}		
+			}
+		}
+		
+	}
+</script>
+
+<style scoped="scoped">
+	.system h1{
+		color: #4583c0;
+		font-weight: 900;
+		/* padding-top: 30px; */
+	}
+	.system_list ul{
+		margin: 0;
+	}
+	.system_list ul li{
+		    margin-top: 30px;
+			margin-left: 30px;
+			margin-right: 40px;
+			font-size: 12px;
+			color: #000000;
+			list-style: disc;
+				cursor:pointer;
+	}
+	.system_li{
+		text-align: center;
+		line-height: 30px;
+		width: 100px;
+		height: 30px;
+		background-color: #fceadb;
+		border: 1px solid #efbd97;
+		border-radius: 4px;
+	}
+</style>

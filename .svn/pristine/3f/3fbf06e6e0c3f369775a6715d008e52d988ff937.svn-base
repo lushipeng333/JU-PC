@@ -1,0 +1,806 @@
+<template>
+  <div class="projectBudgetPlan">
+    <div class="top">
+      <ul v-show="!show">
+        <li @click="turnSaveClick" :class="{'notChoose' : single}" :disabled="single" v-hasPermi="['project:projectBudgetPlan:turn']">转施工总计划</li>
+        <li @click="handleAdd">添加施工总计划</li>
+        <li @click="handleUpdate" :class="{'notChoose' : detiple}" :disabled="detiple">修改施工总计划</li>
+        <li @click="handleDelete" :class="{'notChoose' : multiple}" :disabled="multiple">删除施工总计划</li>
+      </ul>
+      <ul v-show="show">
+        <li @click="submit">保存</li>
+        <li @click="cancel">取消</li>
+      </ul>
+    </div>
+    <div class="conter">
+      <!-- 转施工总计划 -->
+      <el-form ref="form" :model="form" :rules="rules" label-width="130px" v-show="show">
+        <el-row>
+          <el-col :span="8">
+            <el-form-item label="项目名称:">
+              <el-input v-model="form.projectName" :disabled="true" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="工序名称:">
+              <el-select v-model="form.processType" :disabled="true" style="width: 100%;">
+                <el-option v-for="dict in processTypeOptions" :key="dict.dictValue" :label="dict.dictLabel" :value="dict.dictValue" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="楼号:">
+              <el-input v-model="form.buildingNo" :disabled="true" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="8">
+            <el-form-item label="里程碑施工时间:">
+              <el-input v-model="form.constructionTime" :disabled="true" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="组数:">
+              <el-input v-model="form.groupNumber" :disabled="true" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="人数/组:">
+              <el-input v-model="form.numberGroup" :disabled="true" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="8">
+            <el-form-item label="小时/天:">
+              <el-input v-model="form.hourDate" :disabled="true" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="运输时间:">
+              <el-input v-model="form.transportDate" :disabled="true" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="浮动时间:">
+              <el-input v-model="form.floatDate" :disabled="true" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="8">
+            <el-form-item label="施工时间:">
+              <el-input v-model="form.totalHour" :disabled="true" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="开始日期:">
+              <el-date-picker v-model="form.beginTime" type="date" @change="getTime" format="yyyy 年 MM 月 dd 日"
+                value-format="yyyy-MM-dd" placeholder="选择日期">
+              </el-date-picker>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="结束日期:">
+              <el-input v-model="form.endTime" :disabled="true" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div class="left" v-show="!show">
+        <div class="left_top">
+          <div class="message">
+            <div class="messagenav">
+              快速查询:施工计划预算
+            </div>
+          </div>
+          <div class="messageli">
+            <el-form :model="queryParams" ref="queryForm" :inline="true" label-width="120px">
+              <el-form-item label="项目名称:">
+                <el-select v-model="queryParams.projectId" clearable placeholder="请选择项目名称" size="mini" @change="buildingNolist">
+                  <el-option v-for="dict in projectOptions" :key="dict.projectId" :label="dict.projectName" :value="dict.projectId" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="预算计划:">
+                <el-select v-model="queryParams.menuLevel" clearable placeholder="请选择预算计划" size="mini" @change="isshow">
+                  <el-option v-for="dict in budget_planOptions" :key="dict.dictValue" :label="dict.dictLabel" :value="dict.dictValue" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="楼栋:" v-show="ismenuLevel">
+                <el-select v-model="queryParams.buildingNo" clearable placeholder="请选择楼栋" size="mini" @change="floorNolist">
+                  <el-option v-for="dict in buildingNoList" :key="dict.buildingNo" :label="dict.buildingNo" :value="dict.buildingNo" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="楼层:" v-show="ismenuLevels">
+                <el-select v-model="queryParams.floorNo" clearable placeholder="请选择楼层" size="mini">
+                  <el-option v-for="dict in floorNoList" :key="dict.floorNo" :label="dict.floorNo" :value="dict.floorNo" />
+                </el-select>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="cyan" icon="el-icon-search" size="mini" @click="handleQuery">计划预算</el-button>
+                <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+        </div>
+        <div class="left_conter">
+          <div class="message">
+            <div class="messagenav">
+              快速查询:施工总计划
+            </div>
+          </div>
+          <div class="messageli">
+            <el-form :model="queryParamsConter" ref="queryForm" :inline="true" label-width="120px">
+              <el-form-item label="项目名称:">
+                <el-select v-model="queryParamsConter.projectId" clearable placeholder="请选择项目" size="mini">
+                  <el-option v-for="dict in projectOptions" :key="dict.projectId" :label="dict.projectName" :value="dict.projectId" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="工序类别:">
+                <el-select v-model="queryParamsConter.processType" clearable placeholder="请选择工序" size="mini">
+                  <el-option v-for="dict in processTypeOptions" :key="dict.dictValue" :label="dict.dictLabel" :value="dict.dictValue" />
+                </el-select>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="cyan" icon="el-icon-search" size="mini" @click="handleQueryConter">计划预算</el-button>
+                <el-button icon="el-icon-refresh" size="mini" @click="resetQueryConter">重置</el-button>
+              </el-form-item>
+            </el-form>
+          </div>
+        </div>
+      </div>
+      <div class="right" v-show="!show">
+        <div class="right_top">
+          <el-table :data="buildinginfoList" @selection-change="handleSelectionChange" height="100%">
+            <el-table-column type="selection" width="50" align="center" />
+            <el-table-column label="序号" align="center" type="index" />
+            <el-table-column label="项目名称" align="center" prop="projectName" :show-overflow-tooltip="true" />
+            <el-table-column label="工序类别" align="center" prop="processType" :show-overflow-tooltip="true" 　:formatter="processTypeFormat" />
+            <el-table-column label="里程碑施工时间(小时)" width="180">
+              <template slot-scope="scope">
+                <el-input v-model="scope.row.constructionTime" :disabled="true"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column label="组数" prop="groupNumber">
+              <template slot-scope="scope">
+                <el-input v-model="scope.row.groupNumber" onkeyup="value=value.replace(/[^\d]/g,'')" @input="hourDateinput(scope.row)"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column label="人数/组" prop="numberGroup">
+              <template slot-scope="scope">
+                <el-input v-model="scope.row.numberGroup" onkeyup="value=value.replace(/[^\d]/g,'')" @input="hourDateinput(scope.row)"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column label="小时/天" prop="hourDate">
+              <template slot-scope="scope">
+                <el-input v-model="scope.row.hourDate" @keyup.native="form.actualHours =form.actualHours = form.actualHours.replace(/[^\d.]/g,'');
+                       form.actualHours = form.actualHours.replace(/\.{2,}/g,'.');
+                       form.actualHours = form.actualHours.replace(/^\./g,'');
+                       form.actualHours = form.actualHours.replace('.','$#$').replace(/\./g,'').replace('$#$','.');
+                       form.actualHours = form.actualHours.replace(/^(\-)*(\d+)\.(\d\d).*$/,'$1$2.$3');
+                       "
+                  @input="hourDateinput(scope.row)"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column label="运输时间(小时)" width="120" prop="transportDate">
+              <template slot-scope="scope">
+                <el-input v-model="scope.row.transportDate" @keyup.native="form.actualHours =form.actualHours = form.actualHours.replace(/[^\d.]/g,'');
+                       form.actualHours = form.actualHours.replace(/\.{2,}/g,'.');
+                       form.actualHours = form.actualHours.replace(/^\./g,'');
+                       form.actualHours = form.actualHours.replace('.','$#$').replace(/\./g,'').replace('$#$','.');
+                       form.actualHours = form.actualHours.replace(/^(\-)*(\d+)\.(\d\d).*$/,'$1$2.$3');
+                       "
+                  @input="hourDateinput(scope.row)"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column label="浮动时间(小时)" width="120" prop="floatDate">
+              <template slot-scope="scope">
+                <el-input v-model="scope.row.floatDate" @keyup.native="form.actualHours =form.actualHours = form.actualHours.replace(/[^\d.]/g,'');
+                       form.actualHours = form.actualHours.replace(/\.{2,}/g,'.');
+                       form.actualHours = form.actualHours.replace(/^\./g,'');
+                       form.actualHours = form.actualHours.replace('.','$#$').replace(/\./g,'').replace('$#$','.');
+                       form.actualHours = form.actualHours.replace(/^(\-)*(\d+)\.(\d\d).*$/,'$1$2.$3');
+                       "
+                  @input="hourDateinput(scope.row)"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column label="总人数" prop="headcount">
+              <template slot-scope="scope">
+                <el-input v-model="scope.row.headcount" :disabled="true"></el-input>
+              </template>
+            </el-table-column>
+            <el-table-column label="施工时间(天)" width="120" prop="totalHour">
+              <template slot-scope="scope">
+                <el-input v-model="scope.row.totalHour" :disabled="true"></el-input>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+        <div class="right_bottom">
+          <Tabs type="card" style="height: 100%;">
+            <TabPane label="施工总计划">
+              <el-table :data="constructionPlanList" @selection-change="handleSelectionRow" height="100%">
+                <el-table-column type="selection" width="50" align="center" />
+                <el-table-column label="序号" type="index" />
+                <el-table-column label="项目名称 " prop="projectName" :show-overflow-tooltip="true" />
+                <el-table-column label="楼栋" prop="buildingNo" :show-overflow-tooltip="true" />
+                <el-table-column label="里程碑事件" width="100" prop="milestoneEvent" :show-overflow-tooltip="true" />
+                <el-table-column label="施工时间(小时)" width="120" prop="constructionTime" :show-overflow-tooltip="true" />
+                <el-table-column label="组数" prop="groupNumber" :show-overflow-tooltip="true" />
+                <el-table-column label="人数/组" prop="numberGroup" :show-overflow-tooltip="true" />
+                <el-table-column label="小时/天" prop="hourDate" :show-overflow-tooltip="true" />
+                <el-table-column label="运输时间(小时)" width="120" prop="transportDate" :show-overflow-tooltip="true" />
+                <el-table-column label="浮动时间(小时)" width="120" prop="floatDate" :show-overflow-tooltip="true" />
+                <el-table-column label="开始日期" prop="beginTime" :show-overflow-tooltip="true" />
+                <el-table-column label="结束日期" prop="endTime" :show-overflow-tooltip="true" />
+              </el-table>
+            </TabPane>
+            <TabPane label="施工总计划甘特图">标签二的内容</TabPane>
+          </Tabs>
+        </div>
+
+      </div>
+    </div>
+    <!-- 添加修改施工总计划 -->
+    <el-dialog :title="title" :visible.sync="PlanShowHidden" width="440px" append-to-body>
+      <el-form ref="constructionPlanform" :model="constructionPlanform" :rules="PlanformRules" label-width="100px">
+        <el-row>
+          <el-col>
+            <el-form-item label="项目名称:" prop="projectId">
+              <el-select v-model="constructionPlanform.projectName" placeholder="请选择项目名称" :disabled="PlanShow" v-if="PlanShow">
+                <el-option v-for="dict in projectOptions" :key="dict.projectId" :label="dict.projectName" :value="dict.projectId" />
+              </el-select>
+              <el-select v-model="constructionPlanform.projectId" placeholder="请选择项目名称" @change="buildingNosearch" :disabled="PlanShow" v-else>
+                <el-option v-for="dict in projectOptions" :key="dict.projectId" :label="dict.projectName" :value="dict.projectId" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col>
+            <el-form-item label="楼号:" prop="buildingNo">
+              <el-select v-model="constructionPlanform.buildingNo" clearable placeholder="请选择楼号">
+                <el-option v-for="dict in PlanbuildingList" :key="dict.buildingNo" :label="dict.buildingNo" :value="dict.buildingNo" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col>
+            <el-form-item label="里程碑事件:" prop="processType">
+              <el-select v-model="constructionPlanform.processType">
+                <el-option v-for="dict in processTypeOptions" :key="dict.dictValue" :label="dict.dictLabel" :value="dict.dictValue" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col>
+            <el-form-item label="开始日期:" prop="beginTime">
+              <el-date-picker
+              v-model="constructionPlanform.beginTime" type="date"
+              format="yyyy 年 MM 月 dd 日"
+              value-format="yyyy-MM-dd"
+              placeholder="选择开始日期">
+              </el-date-picker>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col>
+            <el-form-item label="结束日期:" prop="endTime">
+              <el-date-picker v-model="constructionPlanform.endTime" format="yyyy 年 MM 月 dd 日"
+                value-format="yyyy-MM-dd" type="date" placeholder="选择结束日期">
+              </el-date-picker>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitCnstructionPlan">确 定</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+  import {
+    getProject,
+    buildingNofindList,
+    projectBudgetPlanList,
+    projectBudgetPlanTurnSave,
+    projectMasterPlanList,
+    projectMasterPlanRemove,
+    projectMasterPlanAdd,
+    projectMasterPlanEdit
+  } from "@/api/project/projectBudgetPlan.js";
+  export default {
+    name: 'projectBudgetPlan',
+    data() {
+      return {
+        PlanShow:false,
+        // 标题
+        title: "",
+        PlanbuildingList: [],
+        // 施工总计划表单
+        constructionPlanform: {},
+        // 表单验证
+        PlanformRules: {
+          projectId: [{
+            required: true,
+            message: "项目名称不能为空",
+            trigger: "blur"
+          }],
+          buildingNo: [{
+            required: true,
+            message: "楼号不能为空",
+            trigger: "blur"
+          }],
+          processType: [{
+            required: true,
+            message: "里程碑事件不能为空",
+            trigger: "blur"
+          }],
+          beginTime: [{
+            required: true,
+            message: "开始日期不能为空",
+            trigger: "blur"
+          }],
+          endTime: [{
+            required: true,
+            message: "结束日期不能为空",
+            trigger: "blur"
+          }],
+        },
+        // 施工总计划弹出层显示隐藏
+        PlanShowHidden: false,
+        show: false,
+        // 非单个禁用
+        single: true,
+        // 非多个禁用
+        multiple: true,
+        // 非单个禁用
+        detiple: true,
+        // 查询参数
+        queryParams: {
+          projectId: "",
+          menuLevel: "",
+          buildingNo: "",
+          floorNo: ""
+        },
+        // 施工总计划查询参数
+        queryParamsConter: {
+          projectId: "",
+          processType: ""
+        },
+        list: [],
+        // 项目名称数组
+        projectOptions: [],
+        // 类别字典
+        processTypeOptions: [],
+        // 预算计划状态
+        budget_planOptions: [],
+        // 楼栋
+        buildingNoList: [],
+        // 楼层
+        floorNoList: [],
+        // 列表数组
+        buildinginfoList: [],
+        // 施工总计划数组
+        constructionPlanList: [],
+        ismenuLevel: false,
+        ismenuLevels: false,
+        // 总人数
+        headcount: '',
+        // 组数
+        groupNumber: '',
+        // 人数
+        numberGroup: '',
+        // 复选框选中数据
+        selectProject: [],
+        // 施工总计划选中id
+        masterPlanid: [],
+        // 施工总计划选中项目名称
+        projectname: [],
+        // 表单参数
+        form: {},
+        // 表单校验
+        rules: {
+          beginTime: [{
+            required: true,
+            message: "开始日期不能为空",
+            trigger: "blur"
+          }, ],
+        }
+
+      }
+    },
+    created() {
+      this.getDicts("budget_plan").then(response => {
+        this.budget_planOptions = response.data;
+      })
+      getProject().then(res => {
+        this.projectOptions = res.data;
+      })
+      this.getDicts("process_type").then(response => {
+        this.processTypeOptions = response.data;
+      })
+    },
+    methods: {
+      // 表单重置
+      reset() {
+        this.form = {
+          projectId: undefined,
+          processType: undefined,
+          buildingNo: undefined,
+          constructionTime: undefined,
+          groupNumber: undefined,
+          numberGroup: undefined,
+          hourDate: undefined,
+          transportDate: undefined,
+          floatDate: undefined,
+          totalHour: undefined,
+          beginTime: undefined,
+          endTime: undefined
+        };
+        this.resetForm("form");
+      },
+      // 获取楼号
+      buildingNolist(val) {
+        let projectId = {
+          projectId: val
+        }
+        buildingNofindList(projectId).then(res => {
+          this.buildingNoList = res.data
+        })
+      },
+      // 查询楼号
+      buildingNosearch(val) {
+        let projectId = {
+          projectId: val
+        }
+        buildingNofindList(projectId).then(res => {
+          this.PlanbuildingList = res.data
+        })
+      },
+      // 获取楼层
+      floorNolist(val) {
+        let query = {
+          projectId: this.queryParams.projectId,
+          buildingNo: val
+        }
+        buildingNofindList(query).then(res => {
+          this.floorNoList = res.data
+        })
+      },
+      // 搜索
+      handleQuery() {
+        projectBudgetPlanList(this.queryParams).then(res => {
+          this.list = res.rows
+          for (let i = 0; i < this.list.length; i++) {
+            this.list[i].headcount = this.list[i].groupNumber * this.list[i].numberGroup
+            this.hourDateinput(this.list[i])
+          }
+          this.buildinginfoList = this.list
+        })
+      },
+      // 总计划搜索
+      handleQueryConter() {
+        projectMasterPlanList(this.queryParamsConter).then(res => {
+          this.constructionPlanList = res.rows
+        })
+      },
+      // 总计划重置
+      resetQueryConter() {
+         this.queryParamsConter = {
+           projectId: undefined,
+           processType: undefined
+         }
+         this.constructionPlanList = []
+      },
+      // 输入框输入值改变
+      hourDateinput(row) {
+        row.headcount = row.groupNumber * row.numberGroup
+        if (row.transportDate == undefined && row.floatDate == undefined) {
+          row.totalHour = Math.ceil((Number(row.constructionTime)) / (Number(row.groupNumber) * Number(row.numberGroup) *
+            Number(row.hourDate)))
+
+        } else if (row.transportDate == undefined) {
+          row.totalHour = Math.ceil((Number(row.constructionTime) + Number(row.floatDate)) / (Number(row.groupNumber) *
+            Number(row.numberGroup) * Number(row.hourDate)))
+
+        } else if (row.floatDate == undefined) {
+          row.totalHour = Math.ceil((Number(row.constructionTime) + Number(row.transportDate)) / (Number(row.groupNumber) *
+            Number(row.numberGroup) * Number(row.hourDate)))
+
+        } else {
+          row.totalHour = Math.ceil((Number(row.constructionTime) + Number(row.transportDate) + Number(row.floatDate)) /
+            (Number(row.groupNumber) * Number(row.numberGroup) * Number(row.hourDate)))
+        }
+      },
+      // 重置
+      resetQuery() {
+        this.queryParams = {
+          projectId: "",
+          menuLevel: "",
+          buildingNo: "",
+          floorNo: ""
+        }
+        this.ismenuLevel = false
+        this.ismenuLevels = false
+        this.buildinginfoList = []
+      },
+      // 表单重置
+      resetform() {
+        this.constructionPlanform = {
+          projectId: undefined,
+          buildingNo: undefined,
+          processType: undefined,
+          beginTime: undefined,
+          endTime: undefined
+        };
+        this.resetForm("constructionPlanform");
+      },
+      // 复选框选中数据
+      handleSelectionChange(selection) {
+        this.selectProject = selection.map((item) => item)
+        this.single = selection.length != 1;
+        if (this.selectProject.length != 0) {
+          if (this.selectProject[0].isShowButton == "yes") {
+            this.single = false
+          } else {
+            this.single = true
+          }
+        }
+
+      },
+      // 施工总计划复选框选中数据
+      handleSelectionRow(selection) {
+        // masterPlanId masterPlanid
+        this.masterPlanid = selection.map((item) => item.masterPlanId)
+        this.projectname = selection.map((item) => item.projectName)
+        this.projectList = selection.map((item) => item)
+        this.detiple = selection.length != 1;
+        this.multiple = !selection.length;
+      },
+      // 选择预算计划出现楼栋楼层
+      isshow(val) {
+        const x = val
+        switch (val) {
+          case "1":
+            this.ismenuLevel = false
+            this.ismenuLevels = false
+            break;
+          case "2":
+            this.ismenuLevel = true
+            this.ismenuLevels = false
+            break;
+          case "3":
+            this.ismenuLevel = true
+            this.ismenuLevels = true
+            break;
+        }
+      },
+      // 字典
+      processTypeFormat(row, column) {
+        return this.selectDictLabel(this.processTypeOptions, row.processType);
+      },
+      // 转总计划
+      turnSaveClick() {
+        this.show = true
+        this.form = this.selectProject[0]
+
+      },
+      // 添加施工总计划
+      handleAdd() {
+        this.title = "添加施工总计划"
+        this.PlanShowHidden = true
+        this.PlanShow = false
+        this.resetform()
+      },
+      // 修改施工总计划
+      handleUpdate() {
+        this.title = "修改施工总计划"
+        this.PlanShowHidden = true
+        this.PlanShow = true
+        this.constructionPlanform = this.projectList[0]
+        let projectId = {
+          projectId: this.constructionPlanform.projectId
+        }
+        buildingNofindList(projectId).then(res => {
+          this.PlanbuildingList = res.data
+        })
+
+      },
+      // 删除施工总计划
+      handleDelete() {
+        const projectId = this.masterPlanid
+        this.$confirm('是否确认删除项目名称为"' + this.projectname + '"的数据项?', "警告", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        }).then(function() {
+          return projectMasterPlanRemove(projectId);
+        }).then(() => {
+          this.handleQueryConter();
+          this.msgSuccess("删除成功");
+        }).catch(function() {});
+      },
+      getTime(val) {
+        //日期，在原有日期基础上，增加days天数，默认增加1天
+        function addDate(date, days) {
+          if (days == undefined || days == '') {
+            days = 1;
+          }
+          var date = new Date(date);
+          date.setDate(date.getDate() + days);
+          let month = date.getMonth() + 1;
+          let day = date.getDate();
+          let mm = "'" + month + "'";
+          let dd = "'" + day + "'";
+          //单位数前面加0
+          if (mm.length == 3) {
+            month = "0" + month;
+          }
+          if (dd.length == 3) {
+            day = "0" + day;
+          }
+          let time = date.getFullYear() + "-" + month + "-" + day
+          return time;
+        }
+        this.form.endTime = addDate(val, this.form.totalHour);
+      },
+      // 保存
+      submit() {
+        projectBudgetPlanTurnSave(this.form).then(res => {
+          this.show = false
+          this.msgSuccess("转施工总计划完成")
+          this.handleQuery()
+          this.handleQueryConter()
+        })
+      },
+      submitCnstructionPlan() {
+         this.$refs["constructionPlanform"].validate((valid) =>{
+           if(valid){
+             if(this.PlanShow == false){
+             projectMasterPlanAdd(this.constructionPlanform).then(res =>{
+            this.msgSuccess("新增施工总计划完成")
+            this.PlanShowHidden = false
+            this.handleQueryConter()
+            this.resetform()
+            this.handleQuery()
+        })
+          }else{
+          projectMasterPlanEdit(this.constructionPlanform).then(res =>{
+            this.msgSuccess("修改施工总计划完成")
+            this.handleQueryConter()
+            this.resetform()
+            this.PlanShowHidden = false
+            this.PlanShow = false
+            this.handleQuery()
+          })
+           }
+           }
+         })
+      },
+      cancel() {
+        this.show = false
+        this.PlanShowHidden = false
+      }
+    }
+
+  }
+</script>
+
+<style scoped="scoped">
+  /* 删除修改按钮是否操作 */
+  .notChoose {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .projectBudgetPlan {
+    width: 100%;
+    height: calc(100% - 104px);
+  }
+
+  .top {
+    background-image: linear-gradient(#5692cf, #00356c);
+    height: 36px;
+    width: 100%;
+    padding: 5px;
+  }
+
+  .top ul li {
+    float: left;
+    line-height: 28px;
+    color: white;
+    border: 1px solid #5681af;
+    font-size: 0.75rem;
+    height: 28px;
+    min-width: 58px;
+    text-align: center;
+    border-radius: 5px;
+    background-image: linear-gradient(#71a1d2, #174f89);
+    cursor: pointer;
+    margin-left: 12px;
+  }
+
+  .conter {
+    background-color: #FFFFFF;
+    width: 100%;
+    height: calc(100% - 36px);
+    border: 1px solid #c0c0c0;
+    display: flex;
+  }
+
+  .left {
+    width: 16%;
+    height: 100%;
+    background-color: #efefef;
+    font-size: 0.875rem;
+    overflow: auto;
+  }
+
+  .left_top {
+    width: 100%;
+    /* height: 50%;
+    min-height: 400px; */
+    padding-bottom: 10px;
+  }
+
+  .left_conter {
+    width: 100%;
+    /* height: 30%;
+    min-height: 220px; */
+    padding-bottom: 10px;
+  }
+
+  .left_bottom {
+    width: 100%;
+    padding-bottom: 10px;
+  }
+
+  .message {
+    width: 100%;
+    height: 30px;
+    line-height: 30px;
+    font-size: 0.75rem;
+    background-image: linear-gradient(#fdfdfe, #cfd0d1);
+    padding-left: 10px;
+    display: flex;
+    justify-content: space-between;
+    padding-right: 10px;
+
+  }
+
+  .messagenav {
+    color: #2a5b8c;
+    font-weight: 900;
+
+  }
+
+  .right {
+    width: 84%;
+    height: 100%;
+  }
+
+  .right_top {
+    width: 100%;
+    height: 40%;
+    /* border-bottom: 1px solid #b2b2b2; */
+    /* overflow: auto; */
+
+  }
+
+  .right_bottom {
+    width: 100%;
+    height: 60%;
+    position: relative;
+    border-top: 1px solid #000000;
+    /* padding-bottom: 60px; */
+    /* overflow: auto; */
+  }
+</style>

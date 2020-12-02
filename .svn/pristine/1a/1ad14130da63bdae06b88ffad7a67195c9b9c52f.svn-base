@@ -1,0 +1,613 @@
+<template>
+  <div class="roleManagement">
+    <div class="roleManagement_top">
+      <ul v-show="show">
+        <li @click="handleAdd" v-hasPermi="['system:role:add']">新增</li>
+        <li :class="{'notChoose' : single}" :disabled="single" @click="handleUpdate" v-hasPermi="['system:role:edit']">修改</li>
+        <li :class="{'notChoose' : multiple}" :disabled="multiple" @click="handleDelete" v-hasPermi="['system:role:remove']">删除</li>
+        <li @click="handleExport" v-hasPermi="['system:role:export']">导出</li>
+        <li :class="{'notChoose' : single}" :disabled="single" @click="handleDataScope" v-hasPermi="['system:role:edit']">数据权限</li>
+      </ul>
+      <ul v-show="!show">
+        <li @click="submitForm">保存</li>
+        <li @click="cancel">取消</li>
+      </ul>
+    </div>
+    <div class="roleManagement_conter">
+      <el-form ref="form" :model="form" :rules="rules" label-width="100px" v-show="noShow" style="width: 100%;">
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="角色名称:" prop="roleName">
+              <el-input v-model="form.roleName" placeholder="请输入角色名称" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="权限字符:" prop="roleKey">
+              <el-input v-model="form.roleKey" placeholder="请输入权限字符" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="角色顺序:" prop="roleSort">
+              <el-input-number v-model="form.roleSort" controls-position="right" :min="0" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="状态:">
+              <el-radio-group v-model="form.status">
+                <el-radio v-for="dict in statusOptions" :key="dict.dictValue" :label="dict.dictValue">{{dict.dictLabel}}</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-col :span="12">
+            <el-form-item label="菜单权限:">
+              <el-tree :data="menuOptions" show-checkbox ref="menu" node-key="id" empty-text="加载中，请稍后" :props="defaultProps"></el-tree>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="备注:">
+              <el-input v-model="form.remark" type="textarea" placeholder="请输入内容"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+
+
+      </el-form>
+
+
+
+      <!-- 分配角色数据权限对话框 -->
+
+      <el-form :model="form" label-width="80px" v-show="permission">
+        <el-form-item label="角色名称:">
+          <el-input v-model="form.roleName" :disabled="true" />
+        </el-form-item>
+        <el-form-item label="权限字符:">
+          <el-input v-model="form.roleKey" :disabled="true" />
+        </el-form-item>
+        <el-form-item label="权限范围:">
+          <el-select v-model="form.dataScope">
+            <el-option v-for="item in dataScopeOptions" :key="item.value" :label="item.label" :value="item.value"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="数据权限:" v-show="form.dataScope == 2">
+          <el-tree :data="deptOptions" show-checkbox default-expand-all ref="dept" node-key="id" empty-text="加载中，请稍后"
+            :props="defaultProps"></el-tree>
+        </el-form-item>
+      </el-form>
+      <div class="left" v-show="show">
+        <div class="message">
+          <div class="messagenav">
+            快速查询
+          </div>
+        </div>
+        <el-form :model="queryParams" ref="queryForm" :inline="true">
+          <el-form-item label="角色名称:" prop="roleName">
+            <el-input v-model="queryParams.roleName" placeholder="请输入角色名称" clearable size="mini" style="width: 100%"
+              @keyup.enter.native="handleQuery" />
+          </el-form-item>
+          <el-form-item label="权限字符:" prop="roleKey">
+            <el-input v-model="queryParams.roleKey" placeholder="请输入权限字符" clearable size="mini" style="width:  100%"
+              @keyup.enter.native="handleQuery" />
+          </el-form-item>
+          <el-form-item label="状态:" prop="status">
+            <el-select v-model="queryParams.status" placeholder="角色状态" clearable size="mini" style="width:  100%">
+              <el-option v-for="dict in statusOptions" :key="dict.dictValue" :label="dict.dictLabel" :value="dict.dictValue" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="创建时间:">
+            <el-date-picker v-model="dateRange" size="mini" style="width:  100%" value-format="yyyy-MM-dd" type="daterange"
+              range-separator="-" start-placeholder="开始日期" end-placeholder="结束日期"></el-date-picker>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="cyan" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+
+      <div class="conter_right" v-show="show">
+        <div class="rigtop">
+          查询结果
+        </div>
+        <el-table :data="roleList" @selection-change="handleSelectionChange" height="100%">
+          <el-table-column type="selection" align="center" />
+          <el-table-column label="序号" type="index" />
+          <el-table-column label="角色名称" prop="roleName" :show-overflow-tooltip="true" />
+          <el-table-column label="权限字符" prop="roleKey" :show-overflow-tooltip="true" />
+          <el-table-column label="显示顺序" prop="roleSort" />
+          <el-table-column label="状态" align="center">
+            <template slot-scope="scope">
+              <el-switch v-model="scope.row.status" active-value="0" inactive-value="1" @change="handleStatusChange(scope.row)"></el-switch>
+            </template>
+          </el-table-column>
+          <el-table-column label="创建时间" align="center" prop="createTime">
+            <template slot-scope="scope">
+              <span>{{ parseTime(scope.row.createTime) }}</span>
+            </template>
+          </el-table-column>
+
+        </el-table>
+   <!--     <div class="page">
+          <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize"
+            @pagination="getList" />
+        </div> -->
+
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  import {
+    listRole,
+    getRole,
+    delRole,
+    addRole,
+    updateRole,
+    exportRole,
+    dataScope,
+    changeRoleStatus
+  } from "@/api/system/role";
+  import {
+    treeselect as menuTreeselect,
+    roleMenuTreeselect
+  } from "@/api/system/menu";
+  import {
+    treeselect as deptTreeselect,
+    roleDeptTreeselect
+  } from "@/api/system/dept";
+
+
+  export default {
+    name: "roleManagement",
+    data() {
+      return {
+        // 点击切换
+        show: true,
+        noShow: false,
+        permission: false,
+        // 选中数组
+        ids: [],
+        // 非单个禁用
+        single: true,
+        // 非多个禁用
+        multiple: true,
+        // 显示搜索条件
+        showSearch: true,
+        // 查询参数
+        queryParams: {
+          roleName: undefined,
+          roleKey: undefined,
+          status: undefined
+        },
+        // 状态数据字典
+        statusOptions: [],
+        // 日期范围
+        dateRange: [],
+        // 角色表格数据
+        roleList: [],
+        // 总条数
+        total: 0,
+        // 表单参数
+        form: {},
+        defaultProps: {
+          children: "children",
+          label: "label"
+        },
+        // 表单校验
+        rules: {
+          roleName: [{
+            required: true,
+            message: "角色名称不能为空",
+            trigger: "blur"
+          }],
+          roleKey: [{
+            required: true,
+            message: "权限字符不能为空",
+            trigger: "blur"
+          }],
+          roleSort: [{
+            required: true,
+            message: "角色顺序不能为空",
+            trigger: "blur"
+          }]
+        },
+        // 菜单列表
+        menuOptions: [],
+        // 部门列表
+        deptOptions: [],
+        // 角色名称
+        rolename:[],
+        // 数据范围选项
+        dataScopeOptions: [{
+            value: "1",
+            label: "全部数据权限"
+          },
+          {
+            value: "2",
+            label: "自定数据权限"
+          },
+          {
+            value: "3",
+            label: "本部门数据权限"
+          },
+          {
+            value: "4",
+            label: "本部门及以下数据权限"
+          },
+          {
+            value: "5",
+            label: "仅本人数据权限"
+          }
+        ],
+
+
+
+      }
+    },
+    watch: {
+
+    },
+    created() {
+      this.getList();
+      this.getDicts("sys_normal_disable").then(response => {
+        this.statusOptions = response.data;
+      });
+    },
+    methods: {
+      /** 查询角色列表 */
+      getList() {
+
+        listRole(this.addDateRange(this.queryParams, this.dateRange)).then(
+          response => {
+            this.roleList = response.rows;
+            this.total = response.total;
+
+          }
+        );
+      },
+      // 表单重置
+      reset() {
+        if (this.$refs.menu != undefined) {
+          this.$refs.menu.setCheckedKeys([]);
+        }
+        this.form = {
+          roleId: undefined,
+          roleName: undefined,
+          roleKey: undefined,
+          roleSort: 0,
+          status: "0",
+          menuIds: [],
+          deptIds: [],
+          remark: undefined
+        };
+        this.resetForm("form");
+      },
+      /** 查询菜单树结构 */
+      getMenuTreeselect() {
+        menuTreeselect().then(response => {
+          this.menuOptions = response.data;
+        });
+      },
+      /** 根据角色ID查询部门树结构 */
+      getRoleDeptTreeselect(roleId) {
+        return roleDeptTreeselect(roleId).then(response => {
+          this.deptOptions = response.depts;
+          return response;
+        });
+      },
+      // 角色状态修改
+      handleStatusChange(row) {
+        let text = row.status === "0" ? "启用" : "停用";
+        this.$confirm('确认要"' + text + '""' + row.roleName + '"角色吗?', "警告", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        }).then(function() {
+          return changeRoleStatus(row.roleId, row.status);
+        }).then(() => {
+          this.msgSuccess(text + "成功");
+        }).catch(function() {
+          row.status = row.status === "0" ? "1" : "0";
+        });
+      },
+      /** 搜索按钮操作 */
+      handleQuery() {
+
+        this.getList();
+      },
+      /** 重置按钮操作 */
+      resetQuery() {
+        this.dateRange = [];
+        this.resetForm("queryForm");
+        this.handleQuery();
+      },
+      /** 根据角色ID查询菜单树结构 */
+      getRoleMenuTreeselect(roleId) {
+        return roleMenuTreeselect(roleId).then(response => {
+          this.menuOptions = response.menus;
+          return response;
+        });
+      },
+      // 多选框选中数据
+      handleSelectionChange(selection) {
+        this.ids = selection.map(item => item.roleId)
+        this.rolename = selection.map(item => item.roleName)
+        this.single = selection.length != 1
+        this.multiple = !selection.length
+      },
+      /** 新增按钮操作 */
+      handleAdd() {
+        this.show = false
+        this.noShow = true
+        this.reset();
+        this.getMenuTreeselect();
+      },
+
+      /** 提交按钮 */
+      submitForm: function() {
+        this.$refs["form"].validate(valid => {
+          if (valid) {
+            if (this.form.roleId != undefined) {
+              this.form.menuIds = this.getMenuAllCheckedKeys();
+              updateRole(this.form).then(response => {
+                if (response.code === 200) {
+                  this.msgSuccess("修改成功");
+                  this.show = true
+                  this.noShow = false
+                  this.getList();
+
+                }
+              });
+            } else {
+              this.form.menuIds = this.getMenuAllCheckedKeys();
+              addRole(this.form).then(response => {
+                if (response.code === 200) {
+                  this.msgSuccess("新增成功");
+                  this.getList();
+                  this.show = true
+                  this.noShow = false
+                }
+              });
+            }
+          }
+        });
+      },
+      /** 修改按钮操作 */
+      handleUpdate(row) {
+        this.show = false
+        this.noShow = true
+        this.reset();
+        const roleId = row.roleId || this.ids
+        const roleMenu = this.getRoleMenuTreeselect(roleId);
+        getRole(roleId).then(response => {
+          this.form = response.data;
+          this.open = true;
+          this.$nextTick(() => {
+            roleMenu.then(res => {
+              this.$refs.menu.setCheckedKeys(res.checkedKeys);
+            });
+          });
+
+        });
+      },
+      /** 分配数据权限操作 */
+      handleDataScope(row) {
+        this.show = false
+        this.noShow = false
+        this.permission = true
+        this.reset();
+        const roleIds = row.roleId || this.ids;
+        console.log(roleIds)
+        const roleDeptTreeselect = this.getRoleDeptTreeselect(roleIds);
+
+        getRole(roleIds).then(response => {
+          this.form = response.data;
+          this.openDataScope = true;
+          this.$nextTick(() => {
+            roleDeptTreeselect.then(res => {
+              this.$refs.dept.setCheckedKeys(res.checkedKeys);
+            });
+          });
+
+        });
+      },
+      // 所有部门节点数据
+      getDeptAllCheckedKeys() {
+        // 目前被选中的部门节点
+        let checkedKeys = this.$refs.dept.getHalfCheckedKeys();
+        // 半选中的部门节点
+        let halfCheckedKeys = this.$refs.dept.getCheckedKeys();
+        checkedKeys.unshift.apply(checkedKeys, halfCheckedKeys);
+        return checkedKeys;
+      },
+      // 所有菜单节点数据
+      getMenuAllCheckedKeys() {
+        // 目前被选中的菜单节点
+        let checkedKeys = this.$refs.menu.getHalfCheckedKeys();
+        // 半选中的菜单节点
+        let halfCheckedKeys = this.$refs.menu.getCheckedKeys();
+        checkedKeys.unshift.apply(checkedKeys, halfCheckedKeys);
+        return checkedKeys;
+      },
+      /** 删除按钮操作 */
+      handleDelete(row) {
+        const roleIds = row.roleId || this.ids;
+
+        this.$confirm('是否确认删除角色名称为"' + this.rolename + '"的数据项?', "警告", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        }).then(function() {
+          return delRole(roleIds);
+        }).then(() => {
+          this.getList();
+          this.msgSuccess("删除成功");
+        }).catch(function() {});
+      },
+      /** 导出按钮操作 */
+      handleExport() {
+        const queryParams = this.queryParams;
+        this.$confirm('是否确认导出所有角色数据项?', "警告", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        }).then(function() {
+          return exportRole(queryParams);
+        }).then(response => {
+          this.download(response.msg);
+        }).catch(function() {});
+      },
+      // 取消按钮
+      cancel() {
+        this.reset();
+        this.show = true
+        this.noShow = false
+        this.permission = false
+      },
+      // 取消按钮（数据权限）
+      cancelDataScope() {
+        this.openDataScope = false;
+        this.reset();
+      },
+    },
+  }
+</script>
+
+<style scoped="scoped">
+  /* 删除修改按钮是否操作 */
+  .notChoose {
+    opacity: 0.8;
+    pointer-events: none;
+  }
+    .roleManagement{
+      height: 100%;
+      width: 100%;
+    }
+  .roleManagement_top {
+    background-image: linear-gradient(#5692cf, #00356c);
+    height: 40px;
+    width: 100%;
+
+    padding: 5px;
+  }
+
+  .roleManagement_top ul li {
+    float: left;
+    line-height: 28px;
+    color: white;
+    border: 1px solid #5681af;
+    font-size: 12px;
+    height: 28px;
+    width: 58px;
+    text-align: center;
+    border-radius: 5px;
+    background-image: linear-gradient(#71a1d2, #174f89);
+    cursor: pointer;
+  }
+
+  .roleManagement_conter {
+    background-color: #FFFFFF;
+    width: 100%;
+    height: 100%;
+    border: 1px solid #c0c0c0;
+    display: flex;
+  }
+
+  /* 左侧 */
+  .left {
+    width: 18%;
+    height: 100%;
+    background-color: #efefef;
+    font-size: 14px;
+    border-right: 1px solid #888888;
+  }
+
+  .left_top {
+    width: 100%;
+    height: 40%;
+  }
+
+  .message {
+    width: 100%;
+    height: 30px;
+    line-height: 30px;
+    font-size: 12px;
+    background-image: linear-gradient(#fdfdfe, #cfd0d1);
+    padding-left: 10px;
+    display: flex;
+    justify-content: space-between;
+    padding-right: 10px;
+
+  }
+
+  .messageli {}
+
+  .messagenav {
+    color: #2a5b8c;
+    font-weight: 900;
+
+  }
+
+  /* 右侧 */
+  .conter_right {
+    width: 82%;
+    height: 82%;
+    position: relative;
+  }
+
+  /* 右侧头部 */
+  .rigtop {
+    width: 100%;
+    height: 24px;
+    line-height: 24px;
+    background-image: linear-gradient(#ffffff, #e5e5e5);
+    font-size: 12px;
+    color: #000000;
+  }
+
+  /* 分页 */
+  .page {
+    width: 100%;
+    position: absolute;
+    right: 0;
+    bottom: 60px;
+    /* background: #039BE5; */
+  }
+</style>
+<style>
+  .input1 .el-input__inner {
+    height: 20px;
+    padding-left: 5px;
+
+  }
+
+  .el-form--inline .el-form-item__label {
+    display: block;
+    text-align: left;
+  }
+  .el-form-item {
+    margin: 0;
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+  .pagination-container {
+    position: fixed;
+    right: 100px;
+    bottom: 12px;
+  }
+  .pagination-container .el-pagination {
+    right: 0;
+    bottom: 0px;
+    position: absolute;
+    background-color: #FFFFFF;
+    z-index: 1000;
+    /* padding-bottom: 20px; */
+  }
+
+</style>

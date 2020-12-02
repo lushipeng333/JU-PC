@@ -1,0 +1,519 @@
+<template>
+  <div class="mes_project">
+       <div class="mes_project_top">
+         <ul>
+           <li @click="handleAdd">新增</li>
+           <li @click="handleUpdate">修改</li>
+           <li>删除</li>
+           <li>状态维护</li>
+           <li>指派项目负责人</li>
+           <li>指派安装组</li>
+           <li>审核</li>
+           <li>导入</li>
+           <li>提交审核</li>
+           <li>添加详情</li>
+         </ul>
+       </div>
+       <div class="mes_project_conter">
+         <div class="conter_left">
+           <div class="message">
+             <div class="messagenav">
+               快速查询
+             </div>
+           </div>
+           <el-form :model="queryParams" ref="queryForm" :inline="true">
+              <el-form-item label="项目名称">
+             <el-select v-model="queryParams.projectName" clearable placeholder="请选择">
+                 <el-option
+                   v-for="item in projectNameList"
+                   :key="item.value"
+                   :label="item.projectName"
+                   :value="item.projectName">
+                 </el-option>
+               </el-select>
+                 </el-form-item>
+                <el-form-item label="项目状态">
+               <el-select v-model="queryParams.checkStatus" clearable placeholder="请选择">
+                   <el-option
+                     v-for="item in checkStatusList"
+                     :key="item.value"
+                     :label="item.dictLabel"
+                     :value="item.dictValue">
+                   </el-option>
+
+                 </el-select>
+                   </el-form-item>
+                    <el-form-item label="项目负责人">
+                 <el-select v-model="queryParams.manager" clearable placeholder="请选择">
+                     <el-option
+                       v-for="item in managerList"
+                       :key="item.value"
+                       :label="item.nickName"
+                       :value="item.userName">
+                     </el-option>
+                   </el-select>
+                     </el-form-item>
+             <el-form-item>
+               <el-button type="cyan" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+               <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+             </el-form-item>
+           </el-form>
+         </div>
+         <div class="conter_right">
+           <div class="right_top">
+              <el-table :data="mes_projectList" @selection-change="handleSelectionChange" @row-click="projectDetail" height="100%" max-height="100%">
+                <el-table-column type="selection" align="center" />
+                <el-table-column label="序号" type="index" />
+                <el-table-column label="项目名称 " prop="projectName" :show-overflow-tooltip="true" />
+                <el-table-column label="项目负责人" prop="manager" :show-overflow-tooltip="true" />
+                 <el-table-column label="指派安装组" prop="installGroupName" :show-overflow-tooltip="true" />
+                  <el-table-column label="开始日期" align="center" prop="downTime" :show-overflow-tooltip="true">
+                  </el-table-column>
+                  <el-table-column label="交付日期" align="center" prop="deliveryTime" :show-overflow-tooltip="true">
+                  </el-table-column>
+                   <el-table-column label="创建人" prop="createBy" :show-overflow-tooltip="true" />
+                    <el-table-column label="创建日期" align="center" prop="createTime" :show-overflow-tooltip="true">
+                    </el-table-column>
+                <el-table-column label="项目状态" align="center" prop="checkStatus" :formatter="statusFormat">
+                  <template slot-scope="scope">
+                    <span v-if="scope.row.checkStatus == 1">未释放</span>
+                    <span v-else-if="scope.row.checkStatus == 2">释放</span>
+                    <span v-else-if="scope.row.checkStatus == 3">执行中</span>
+                    <span v-else-if="scope.row.checkStatus == 4">驳回</span>
+                    <span v-else-if="scope.row.checkStatus == 5">关闭</span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="项目类型" prop="projectType" :show-overflow-tooltip="true">
+                <template slot-scope="scope">
+                  <span v-if="scope.row.projectType == 1">工程</span>
+                  <span v-else-if="scope.row.projectType == 2">散单</span>
+                  <span v-else-if="scope.row.projectType == 3">代加工</span>
+                </template>
+                </el-table-column>
+                <el-table-column label="审核人" prop="checkBy" :show-overflow-tooltip="true" />
+                <el-table-column label="审核日期" align="center" prop="checkTime" :show-overflow-tooltip="true">
+                </el-table-column>
+               <el-table-column label="驳回备注" prop="remark" :show-overflow-tooltip="true" />
+              </el-table>
+
+           </div>
+           <div id="pages" class="right_conter">
+             <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" class="page"
+               @pagination="getList" />
+           </div>
+           <div class="right_bottom">
+             <Tabs value="name1" style="height: 100%;" type="card">
+                 <TabPane label="标签一" name="name1" class="aaa" style="height: 100%;">
+                <el-table :data="projectListDetail" @selection-change="handleSelectionChange" height="100%" max-height="100%">
+                <el-table-column type="selection" align="center" />
+                <el-table-column label="序号" type="index" />
+                <el-table-column label="窗号 " prop="winNo" :show-overflow-tooltip="true" />
+                <el-table-column label="甲方窗号" prop="partyWinNo" :show-overflow-tooltip="true" />
+                <el-table-column label="系列名称" prop="winModelName" :show-overflow-tooltip="true" />
+                <el-table-column label="数量" prop="projectNum" :show-overflow-tooltip="true" />
+                <el-table-column label="单樘暂估量(m²)" prop="preNum" :show-overflow-tooltip="true" />
+                <el-table-column label="总暂估量(m²)" prop="extra1" :show-overflow-tooltip="true" />
+                <el-table-column label="合同单价(元/m²)" prop="contractPrice" :show-overflow-tooltip="true" />
+                <el-table-column label="创建时间" prop="createTime" :show-overflow-tooltip="true" />
+              </el-table>
+                     </TabPane>
+                     <TabPane label="标签二" name="name2">标签二的内容</TabPane>
+                     <TabPane label="标签三" name="name3">标签三的内容</TabPane>
+                 </Tabs>
+
+           </div>
+          <!-- <div id="pagess" >
+                <pagination v-show="total1>0" :total="total1" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" class="page"
+                  @pagination="getList" />
+           </div> -->
+         </div>
+       </div>
+       <!-- 添加或修改参数配置对话框 -->
+           <el-dialog :title="title" :visible.sync="open" width="600px" append-to-body>
+             <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+               <el-row>
+                 <el-col>
+                   <el-form-item label="项目名称" prop="projectName">
+                     <el-input v-model="form.projectName" placeholder="请输入用户昵称" clearable />
+                   </el-form-item>
+                 </el-col>
+                 <el-col>
+                   <el-form-item label="项目负责人">
+                      <el-select v-model="form.manager" placeholder="请选择" clearable>
+                          <el-option v-for="item in managerList" :key="item.projectId" :label="item.nickName" :value="item.userName" ></el-option>
+                      </el-select>
+                   </el-form-item>
+                 </el-col>
+                 <el-col>
+                   <el-form-item label="项目类型" prop="projectType" >
+                     <el-select v-model="form.projectType" placeholder="请选择" clearable>
+                         <el-option v-for="item in projectType" :key="item.dictCode" :label="item.dictLabel" :value="item.dictValue" ></el-option>
+                     </el-select>
+                   </el-form-item>
+                 </el-col>
+                 <el-col>
+                   <el-form-item label="开始日期" prop="downTime">
+                     <el-date-picker
+                           v-model="form.downTime"
+                           format="yyyy-MM-dd"
+                           value-format="yyyy-MM-dd"
+                           placeholder="选择日期">
+                         </el-date-picker>
+                   </el-form-item>
+                 </el-col>
+                 <el-col>
+                   <el-form-item label="交付日期" prop="deliveryTime">
+                     <el-date-picker
+                           v-model="form.deliveryTime"
+                           format="yyyy-MM-dd"
+                           value-format="yyyy-MM-dd"
+                           placeholder="选择日期">
+                         </el-date-picker>
+                   </el-form-item>
+                 </el-col>
+               </el-row>
+             </el-form>
+             <div slot="footer" class="dialog-footer">
+               <el-button type="primary" @click="submitForm">确 定</el-button>
+               <el-button @click="cancel">取 消</el-button>
+             </div>
+           </el-dialog>
+  </div>
+</template>
+
+<script>
+  import {
+    listMes_project,
+    addMes_project,
+    getProjectName,
+    getProjectDetailWinNo,
+    addMes_project_detail,
+    updateMes_project,
+    checkEditMes_project,
+    statusMes_project,
+    editProjecTeamByprojectId,
+    updateMes_project_detail,
+    listMes_project_detail,
+    removeDetailMes_project,
+    importTemplate,
+    importData,
+    getProject,
+    getManager,
+    removeMes_project,
+    getcheckStatus,
+    getProjectType,
+    getMesProjectById
+  } from "@/api/project/mes_project.js";
+export default{
+   name:'mes_project',
+   data(){
+     return{
+       // 是否显示弹出层
+       open: false,
+       // 弹出层标题
+       title: "",
+        // 选中数组
+      ids: [],
+      // 非单个禁用
+      single: true,
+      // 非多个禁用
+      multiple: true,
+       // 项目名称数组
+       projectNameList:[],
+       // 项目状态数组
+       checkStatusList:[],
+       // 项目负责人数组
+       managerList:[],
+       // 项目类型数组
+        projectType:[],
+       // 角色表格数据
+       mes_projectList: [],
+       // 详细列表数据
+       // 选中数据
+       selectProject:[],
+       projectListDetail:[],
+       // 总条数
+       total: 0,
+       // 详细列表条数
+       total1: 0,
+       // 日期范围
+       dateRange: [],
+       // 查询参数
+       queryParams: {
+         pageNum: 1,
+         pageSize: 10,
+         checkStatus:undefined,
+         manager: undefined,
+         projectName: undefined,
+
+       },
+       form:{},
+       // 表单校验
+             rules: {
+               projectName: [
+                 { required: true, message: "项目称不能为空", trigger: "blur" }
+               ],
+               projectType: [
+                 { required: true, message: "项目类型不能为空", trigger: "blur" }
+               ],
+               downTime: [
+                 { required: true, message: "开始日期不能为空", trigger: "blur" }
+               ],
+               deliveryTime: [
+                 { required: true, message: "结束日期不能为空", trigger: "blur" }
+               ]
+             }
+     }
+   },
+   created() {
+     this.getList()
+     getProject().then(res =>{
+         this.projectNameList = res.data;
+       })
+       getManager().then(res =>{
+         this.managerList = res.data
+         // console.log(res)
+       })
+         getcheckStatus().then(res =>{
+           this.checkStatusList = res.data
+           // console.log(res.data,"aa")
+         })
+         getProjectType().then(res =>{
+           this.projectType = res.data
+           console.log(res,"sssws")
+         })
+   },
+   methods:{
+     // 表单重置
+         reset() {
+           this.form = {
+             projectName:undefined,
+             manager: undefined,
+             downTime: undefined,
+             deliveryTime: undefined,
+             projectType:undefined
+           };
+           this.resetForm("form");
+         },
+         // 查询项目列表
+         getList(){
+         listMes_project(this.queryParams).then(
+           response => {
+             console.log(response,"mes_projectList")
+             this.mes_projectList = response.rows;
+             this.total = response.total;
+             console.log(response.rows)
+           }
+         )
+         .catch(req =>{console.log(req)})
+     },
+     // 新增按钮
+     handleAdd(){
+         this.open = true
+         this.title = "添加项目合同信息";
+     },
+     /** 修改按钮操作 */
+         handleUpdate(row) {
+           this.open = true;
+            this.title = "修改项目合同信息";
+           // this.reset()
+           console.log(this.form)
+           const projectId = row.projectId || this.ids;
+           getMesProjectById(projectId).then((response) => {
+              this.form = response
+
+
+             // this.form.password = "";
+           });
+
+         },
+     // 搜索
+     handleQuery(){
+        this.queryParams.pageNum = 1;
+        this.getList();
+     },
+     // 重置
+     resetQuery(){
+       this.queryParams = {
+         pageNum: 1,
+         pageSize: 10,
+         checkStatus:undefined,
+         manager: undefined,
+         projectName: undefined,
+       },
+        this.handleQuery()
+     },
+     // 多选框选中数据
+     handleSelectionChange(selection){
+       this.selectProject = selection.map((item) => item)
+            this.ids = selection.map((item) => item.projectId);
+            this.single = selection.length != 1;
+            this.multiple = !selection.length;
+            console.log(selection)
+     },
+     // 状态翻译
+     statusFormat(row, column) {
+
+       // return this.selectDictLabel(this.statusOptions, row.status);
+     },
+     projectDetail(row, column, event){
+       listMes_project_detail(row.projectId).then(res =>{
+        this.projectListDetail = res.rows
+        this.total1 = res.total;
+       })
+
+     },
+    // 提交按钮
+    submitForm(){
+      this.$refs["form"].validate((valid) =>{
+
+         addMes_project(this.form).then(res =>{
+          this.msgSuccess("新增成功");
+          this.getList();
+        })
+
+
+      })
+      console.log(this.form)
+    },
+     // 取消提交
+     cancel(){
+        this.open = false
+     }
+   }
+}
+</script>
+
+<style scoped="scoped">
+  .mes_project{
+    width: 100%;
+    height: 100%;
+  }
+  .mes_project_top {
+    background-image: linear-gradient(#5692cf, #00356c);
+    height: 40px;
+    width: 100%;
+
+    padding: 5px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .mes_project_top ul li {
+    float: left;
+    line-height: 28px;
+    color: white;
+    border: 1px solid #5681af;
+    font-size: 12px;
+    height: 28px;
+    width: 58px;
+    text-align: center;
+    border-radius: 5px;
+    background-image: linear-gradient(#71a1d2, #174f89);
+    cursor: pointer;
+    margin-left: 5px;
+  }
+  .mes_project_top ul li:hover {
+    background-image: linear-gradient(#92bde5, #1f548b);
+  }
+  .mes_project_conter {
+    background-color: #FFFFFF;
+    width: 100%;
+    height: 100%;
+    border: 1px solid #c0c0c0;
+    display: flex;
+  }
+  .conter_left {
+    width: 18%;
+    height: 100%;
+    border-right: 1px solid #b2b2b2;
+    overflow: auto;
+    background-color: #efefef;
+    font-size: 14px;
+
+  }
+  .message {
+    width: 100%;
+    height: 30px;
+    line-height: 30px;
+    font-size: 12px;
+    background-image: linear-gradient(#fdfdfe, #cfd0d1);
+    padding-left: 10px;
+    display: flex;
+    justify-content: space-between;
+    padding-right: 10px;
+
+  }
+  .messagenav {
+    color: #2a5b8c;
+    font-weight: 900;
+
+  }
+  .conter_right {
+    width: 82%;
+    height: 100%;
+  }
+  .page{
+    width: 100%;
+    height: 30px;
+    padding: 0;
+    margin: 0;
+    position: static !important;
+
+  }
+  .right_top{
+    width: 100%;
+    height: 40%;
+    /* border-bottom: 1px solid #b2b2b2; */
+    /* overflow: auto; */
+
+  }
+  #pagess{
+    display: flex;
+    justify-content: flex-end;
+  }
+  .right_conter{
+    width: 100%;
+    height: 30px;
+  }
+  .right_bottom{
+    width: 100%;
+    height: 42%;
+    /* padding-bottom: 60px; */
+    /* overflow: auto; */
+  }
+/deep/ .ivu-tabs-content {
+     height: 90%;
+   }
+  /deep/ .ivu-tabs-bar{
+     margin: 0;
+   }
+</style>
+<style>
+   #pages .pagination-container{
+     padding: 0 !important;
+     margin: 0;
+     position: static !important;
+   }
+   #pages .page .el-pagination .is-background{
+    position: static !important;
+   }
+   #pages .page .acba{
+     position: static;
+     display: flex;
+     justify-content: flex-end;
+   }
+   #pagess .pagination-container{
+     padding: 0 !important;
+     margin: 0;
+     position: static !important;
+   }
+   #pagess .page .el-pagination .is-background{
+    position: static !important;
+   }
+   #pagess .page .acba{
+     position: static;
+     display: flex;
+     justify-content: flex-end;
+   }
+
+</style>

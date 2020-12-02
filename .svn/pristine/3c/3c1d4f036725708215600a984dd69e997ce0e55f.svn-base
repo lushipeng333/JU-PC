@@ -1,0 +1,14 @@
+<template>
+	<div class="dictionaries">
+		字典管理组件页面
+	</div>
+</template>
+
+<script>
+	export default{
+		name:'dictionaries'
+	}
+</script>
+
+<style>
+</style>

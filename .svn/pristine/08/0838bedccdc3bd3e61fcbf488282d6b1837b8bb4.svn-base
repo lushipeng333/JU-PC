@@ -1,0 +1,19 @@
+import request from '@/utils/request'
+
+// 查询列表
+export function listBuildinginfo(query) {
+  return request({
+    url: '/project/buildinginfo/list',
+    method: 'get',
+    params: query
+  })
+}
+
+// 下拉框获取项目
+export function getProject(query){
+  return request({
+    url: '/project/mes_project/getProject',
+    method: 'get',
+    params: query
+  })
+}

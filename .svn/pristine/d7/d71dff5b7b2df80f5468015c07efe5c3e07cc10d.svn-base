@@ -1,0 +1,83 @@
+<template>
+	<div class="supply">
+		<div class="supply_list">
+			<ul>
+				<router-link :to="rt">
+					<li :class="{supply_li : index === listnum }" v-for="(item,index) in list" :key="index" @click="liClick(index)">
+				{{item.name}}
+				</li>
+				</router-link>
+				
+				</ul>
+		</div>
+		<div class="posoi">
+			<router-view></router-view>
+		</div>
+	</div>
+</template>
+
+<script>
+	export default{
+		name:"supply",
+		data(){
+			return {
+				list:[
+					{name:'项目管理系统'},
+					{name:'生产管控系统'},
+					{name:'系统管理'}
+				],
+				listnum:0,
+				rt:''
+			}
+		},
+		methods:{
+			liClick(index){
+				this.listnum = index
+				if (index == 0) {
+					this.rt = '/navigation/supply/'
+				} else if (index == 1) {
+					this.rt = '/supply/inventory'
+					// this.$router.push('/supply/inventory')
+				}else if(index == 2){
+					this.rt = '/supply/system'
+				}
+			}
+		}
+	}
+</script>
+
+<style>
+	.supply{
+		width: 100%;
+		height: 100%;
+		display: flex;
+	}
+	.supply_list{
+		width: 130px;
+	    height: 100%;
+		text-align: center;
+		padding-top: 20px;
+		border: 1px solid #bfc0c2;
+		border-width: 0px 1px 0px 0px;
+		box-shadow: inset -2px 0px 0px 0px #f3f4f5;
+		
+	}
+	.supply_list ul li{
+		padding: 8px 5px 8px 5px;
+		margin: 5px 10px 5px 10px;
+		font-size: 14px;
+		color: #000000;
+		text-align:left;
+	}
+	.supply_li{
+		background-color: #fceadb;
+		border: 1px solid #efbd97;
+		border-radius: 4px;
+	}
+	.posoi{
+	  padding: 20px;
+	  border: 1px solid #bfc0c2;
+	  border-width: 0px 1px 0px 0px;
+		
+	}
+</style>

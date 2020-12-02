@@ -1,0 +1,401 @@
+<template>
+	<div class="foorter">
+	<div class="navigation_bottom">
+		<div class="left">
+			<!-- <span>当前位置：功能导航</span> -->
+		</div>
+		<div class="right">
+			<ul>
+				<li>聚辉门窗  123</li>
+				<li class="three" @click="threeClick">
+					<el-popover placement="top-end" popper-class="popo" trigger="click">
+						<ul>
+							<li>123,您好！ 2020-09-11 聚辉门窗</li>
+							<!-- <li>当前集团：聚辉门窗</li> -->
+							<!-- <li @click="open">注销</li> -->
+							 <li @click="modal10 = true">注销</li>
+							    <Modal
+							        title="注销登录"
+							        v-model="modal10"
+									cancel-text="否(N)"
+									ok-text="是(Y)"
+									width="366px"
+									@on-ok="gologin"
+									:mask-closable="false"
+							        class-name="vertical-center-modal">
+
+									<div><img src="../../assets/popup/doubt.png" alt=""></div>
+
+							        <div>注销登录将关闭所有已打开的功能窗口,您确定要注销登录吗？</div>
+							    </Modal>
+						</ul>
+						<span slot="reference">
+							<i class="el-icon-user-solid"></i>
+							<i class="el-icon-caret-top"></i>
+						</span>
+					</el-popover>
+					<!-- <i class="el-icon-user-solid"></i>
+					<i class="el-icon-caret-top"></i> -->
+				</li>
+				<li class="two" @click="twoClick">
+					<el-popover placement="top-end" popper-class="popop" trigger="click">
+						<ul>
+							<li v-for="(item,index) in twoli" :key="index" :title="item.value">{{item.value}}</li>
+						</ul>
+						<span slot="reference">
+							<i class="el-icon-question"></i>
+							<i class="el-icon-caret-top"></i>
+						</span>
+					</el-popover>
+				</li>
+				<li class="one" @click="oneClick">
+					<el-popover popper-class="pop" placement="top-end" trigger="click">
+						<ul>
+							<li v-for="(item,index) in oneli" :key="index" :title="item.value">{{item.value}}</li>
+						</ul>
+						<i class="el-icon-caret-top" slot="reference"></i>
+					</el-popover>
+				</li>
+			</ul>
+		</div>
+	</div>
+
+	</div>
+
+</template>
+
+<script>
+  import { mapGetters } from 'vuex'
+  import Breadcrumb from '@/components/Breadcrumb'
+  import Hamburger from '@/components/Hamburger'
+  import Screenfull from '@/components/Screenfull'
+  import SizeSelect from '@/components/SizeSelect'
+  import Search from '@/components/HeaderSearch'
+  import RuoYiGit from '@/components/RuoYi/Git'
+  import RuoYiDoc from '@/components/RuoYi/Doc'
+
+	export default {
+    components: {
+    Breadcrumb,
+    Hamburger,
+    Screenfull,
+    SizeSelect,
+    Search,
+    RuoYiGit,
+    RuoYiDoc
+  },
+  computed: {
+      ...mapGetters([
+        'sidebar',
+        'avatar',
+        'device'
+      ]),
+        setting: {
+          get() {
+            return this.$store.state.settings.showSettings
+          },
+          set(val) {
+            this.$store.dispatch('settings/changeSetting', {
+              key: 'showSettings',
+              value: val
+            })
+          }
+        }
+    },
+		name:'foorter',
+		data(){
+			return{
+			modal10: false,
+			threeClick() {
+
+			},
+			twoClick() {
+
+			},
+			oneClick() {
+
+			},
+			oneli: [{
+					id: 1,
+					value: '日志'
+				},
+				{
+					id: 2,
+					value: '合同半结构化末班下载'
+				},
+				{
+					id: 3,
+					value: '下载预算Excel客户端'
+				},
+				{
+					id: 4,
+					value: '缓存配置'
+				},
+				{
+					id: 5,
+					value: '删除功能节点缓存'
+				},
+				{
+					id: 6,
+					value: '密码修改'
+				},
+				{
+					id: 7,
+					value: '个人日志'
+				},
+				{
+					id: 8,
+					value: '切换业务日期'
+				},
+				{
+					id: 9,
+					value: '网络测试'
+				},
+				{
+					id: 10,
+					value: '状态栏显示设置'
+				}
+			],
+			twoli: [{
+					id: 1,
+					value: '快速入门'
+				},
+				{
+					id: 2,
+					value: '帮助'
+				},
+				{
+					id: 3,
+					value: '在线帮助系统'
+				},
+				{
+					id: 4,
+					value: '提交问题'
+				},
+				{
+					id: 5,
+					value: 'NC在线服务支持网'
+				},
+				{
+					id: 6,
+					value: '日志'
+				},
+				{
+					id: 7,
+					value: '用友服务支持网'
+				},
+				{
+					id: 8,
+					value: '联系我们'
+				}
+			],
+			threeli: [{
+					id: 1,
+					value: '123,您好！2019-09-11  聚辉门窗'
+				},
+				{
+					id: 2,
+					value: '当前公司：聚辉门窗'
+				},
+				{
+					id: 3,
+					value: '注销'
+				}
+		],
+
+			}
+		},
+		methods:{
+			gologin(){
+
+               this.$store.dispatch('LogOut').then(() => {
+                  location.href = '/index';
+                })
+
+
+        console.log("页面跳转")
+			}
+		}
+	}
+</script>
+
+<style scoped="scoped">
+ .navigation_bottom {
+	    z-index: 1000;
+ 		width: calc(100% - 182px);
+ 		height: 24px;
+ 		background-image: linear-gradient(#fefefe, #ececee);
+ 		position: fixed;
+ 		bottom: 0px;
+ 		display: flex;
+ 		justify-content: space-between;
+ 		line-height: 24px;
+ 		border: 1px solid #bfc0c2;
+ 		border-width: 1px 0px 0px 1px;
+ 	}
+
+ 	.navigation_bottom ul li {
+ 		list-style: none;
+ 		float: left;
+ 		border: 1px solid #b2b2b2;
+ 		border-width: 0px 0px 0px 1px;
+ 		text-align: center;
+ 		padding-left: 20px;
+ 		padding-right: 20px;
+
+ 	}
+ .navigation_bottom ul li:nth-child(1){
+ 	font-size: 13px;
+ }
+ 	.navigation_bottom .right {}
+
+ 	.three,
+ 	.two,
+ 	.one {
+ 		font-size: 16px;
+ 		color: #528dcc;
+ 	}
+</style>
+<style>
+	.el-popover {
+		background-image: linear-gradient(#dbedff, #acd5ff, #a1d1ff);
+		width: 210px;
+		height: 240px;
+		border-radius: 0px 20px 0px 20px;
+		border: 1px solid #76a8d6;
+		/* text-align: center; */
+
+		/*  */
+	}
+
+	.el-popover ul li {
+		/* margin-left: 17px; */
+		padding-left: 17px;
+		font-size: 12px;
+		color: #096cbf;
+		margin-top: 5px;
+	}
+
+	.el-popover ul li:hover {
+		background-image: linear-gradient(#9ac4ec, #83b1dd);
+		color: white;
+	}
+
+	.popper__arrow {
+		transform: rotate(90deg);
+		content: none;
+		display: none !important;
+	}
+
+	.popo {
+		height: 100px !important;
+		width: 270px;
+		border-radius: 0px 20px 0px 20px;
+	}
+
+	.popop {
+		width: 200px;
+		height: 200px;
+		border-radius: 0px 20px 0px 20px;
+	}
+	/* 弹出框 */
+	.ivu-modal-content{
+		border: 2px solid #3d8fe3 !important;
+		width: 350px;
+		height: 200px;
+		background-color: #ededed;
+	}
+	.vertical-center-modal{
+		        display: flex;
+		        align-items: center;
+		        justify-content: center;
+		        .ivu-modal{
+		            top: 0;
+		        }
+	}
+	.ivu-modal-header{
+		padding: 0;
+		width: 100%;
+		height: 26px;
+		background-image: linear-gradient(#86c1fb , #3d8fe3);
+	}
+	.ivu-modal-header-inner{
+		color: white;
+		font-size: 14px;
+		line-height: 26px;
+		padding-left: 20px;
+	}
+	.ivu-modal-close{
+		background-color: #3377bd;
+		position: absolute;
+	    top: 0px;
+	    right: 2px;
+		width: 24px;
+		height: 20px;
+		text-align: center;
+	}
+	.ivu-icon .ivu-icon-ios-close{
+		color: white;
+
+	}
+	.ivu-modal-close .ivu-icon-ios-close{
+		font-size: 25px;
+		color: white;
+		position: relative;
+		    top: -2px;
+	}
+	.ivu-modal-footer{
+		padding: 0;
+		position:absolute ;
+		bottom: 0px;
+		right: 0px;
+		width: 100%;
+		border-top: 1px solid #7f9db9;
+	    padding: 10px;
+	}
+	.ivu-btn-primary {
+	    color: #404042;
+	    background-color: #EDEDED;
+	    border-color: #EDEDED;
+	}
+	.ivu-modal-body{
+		display: flex;
+	}
+	.ivu-modal-body div:nth-child(1){
+		margin-right: 16px;
+	}
+	.ivu-modal-close,.ivu-icon-ios-close:hover {
+	    color: none;
+	}
+	.ivu-btn-text:hover{
+	    color: #2162a6;
+	    background-color: #d8ecff;
+	    border-color: #4da1f4;
+	}
+	.ivu-btn-primary:hover {
+	    color: #2162a6;
+	    background-color: #d8ecff;
+	    border-color: #4da1f4;
+	}
+	.ivu-btn{
+		height: 20px;
+		/* margin: 10px; */
+		border: 1px solid #bfbfbf;
+		color: #404042;
+		border-radius: 6px;
+    padding: 0px 10px 0px 10px; 
+	}
+	.ivu-modal-body{
+		color: #000000;
+	}
+	.ivu-modal {
+	    width: auto;
+	    margin: 0 auto;
+	    position: relative;
+	    outline: 0;
+	    top: 0px;
+	}
+	.ivu-modal{
+		width: 100%;
+	}
+</style>

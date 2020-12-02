@@ -1,0 +1,1179 @@
+<template>
+  <div class="mes_project">
+    <div class="mes_project_top">
+      <ul v-show="!addupdate">
+        <li @click="handleAdd">新增</li>
+        <li v-show="show" @click="handleUpdate" :class="{'notChoose' : single}" :disabled="single">修改</li>
+        <li v-show="show" :class="{'notChoose' : multiple}" :disabled="multiple" @click="handleDelete">删除</li>
+        <li @click="MaintainingState" :class="{'notChoose' : single}" :disabled="single">状态维护</li>
+        <li @click="UpdatePrincipal" :class="{'notChoose' : single}" :disabled="single">指派项目负责人</li>
+        <li @click="ProjecTeam" :class="{'notChoose' : single}" :disabled="single">指派安装组</li>
+        <li v-show="show" @click="projectAudit" :class="{'notChoose' : single}" :disabled="single">审核</li>
+        <li v-show="show" @click="handleImport" :class="{'notChoose' : single}" :disabled="single">导入</li>
+        <li v-show="show" @click="submitAudit" :class="{'notChoose' : single}" :disabled="single">提交审核</li>
+        <li v-show="show" @click="addDetails" :class="{'notChoose' : single}" :disabled="single">添加详情</li>
+      </ul>
+      <ul v-show="addupdate">
+        <li @click="submitForm">保存</li>
+        <li @click="cancel">取消</li>
+      </ul>
+    </div>
+    <div class="mes_project_conter">
+      <!-- 添加或修改参数配置对话框 -->
+
+        <el-form ref="form" :model="form" :rules="rules" label-width="100px" v-show="addupdate">
+          <el-row>
+            <el-col>
+              <el-form-item label="项目名称" prop="projectName" style="width: 50%;">
+                <el-input v-model="form.projectName" placeholder="请输入用户昵称" clearable />
+              </el-form-item>
+            </el-col>
+            <el-col>
+              <el-form-item label="项目负责人">
+                <el-select v-model="form.manager" placeholder="请选择" clearable>
+                  <el-option v-for="item in managerList" :key="item.projectId" :label="item.nickName" :value="item.userName"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col>
+              <el-form-item label="项目类型" prop="projectType">
+                <el-select v-model="form.projectType" placeholder="请选择" clearable>
+                  <el-option v-for="item in projectType" :key="item.dictCode" :label="item.dictLabel" :value="item.dictValue"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col>
+              <el-form-item label="开始日期" prop="downTime">
+                <el-date-picker v-model="form.downTime" format="yyyy-MM-dd" value-format="yyyy-MM-dd" placeholder="选择日期">
+                </el-date-picker>
+              </el-form-item>
+            </el-col>
+            <el-col>
+              <el-form-item label="交付日期" prop="deliveryTime">
+                <el-date-picker v-model="form.deliveryTime" format="yyyy-MM-dd" value-format="yyyy-MM-dd" placeholder="选择日期">
+                </el-date-picker>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+        <!-- <div slot="footer" class="dialog-footer">
+          <el-button type="primary" @click="submitForm">确 定</el-button>
+          <el-button @click="cancel">取 消</el-button>
+        </div> -->
+
+      <div class="conter_left" v-show="!addupdate">
+        <div class="message">
+          <div class="messagenav">
+            快速查询
+          </div>
+        </div>
+        <el-form :model="queryParams" ref="queryForm" :inline="true">
+          <el-form-item label="项目名称">
+            <el-select v-model="queryParams.projectName" clearable placeholder="请选择">
+              <el-option v-for="item in projectNameList" :key="item.value" :label="item.projectName" :value="item.projectName">
+              </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="项目状态">
+            <el-select v-model="queryParams.checkStatus" clearable placeholder="请选择">
+              <el-option v-for="item in checkStatusList" :key="item.value" :label="item.dictLabel" :value="item.dictValue">
+              </el-option>
+
+            </el-select>
+          </el-form-item>
+          <el-form-item label="项目负责人">
+            <el-select v-model="queryParams.manager" clearable placeholder="请选择">
+              <el-option v-for="item in managerList" :key="item.value" :label="item.nickName" :value="item.userName">
+              </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="cyan" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+      <div class="conter_right" v-show="!addupdate">
+        <div class="right_top">
+          <el-table :data="mes_projectList" @selection-change="handleSelectionChange" @row-click="projectDetail" height="100%"
+            max-height="100%">
+            <el-table-column type="selection" align="center" />
+            <el-table-column label="序号" type="index" />
+            <el-table-column label="项目名称 " prop="projectName" :show-overflow-tooltip="true" />
+            <el-table-column label="项目负责人" prop="manager" :show-overflow-tooltip="true" />
+            <el-table-column label="指派安装组" prop="installGroupName" :show-overflow-tooltip="true" />
+            <el-table-column label="开始日期" align="center" prop="downTime" :show-overflow-tooltip="true">
+            </el-table-column>
+            <el-table-column label="交付日期" align="center" prop="deliveryTime" :show-overflow-tooltip="true">
+            </el-table-column>
+            <el-table-column label="创建人" prop="createBy" :show-overflow-tooltip="true" />
+            <el-table-column label="创建日期" align="center" prop="createTime" :show-overflow-tooltip="true">
+            </el-table-column>
+            <el-table-column label="项目状态" align="center" prop="checkStatus" :formatter="statusFormat">
+            </el-table-column>
+            <el-table-column label="项目类型" prop="projectType" :show-overflow-tooltip="true" :formatter="projectTypeFormat">
+            </el-table-column>
+            <el-table-column label="审核人" prop="checkBy" :show-overflow-tooltip="true" />
+            <el-table-column label="审核日期" align="center" prop="checkTime" :show-overflow-tooltip="true">
+            </el-table-column>
+            <el-table-column label="驳回备注" prop="remark" :show-overflow-tooltip="true" />
+          </el-table>
+
+        </div>
+       <!-- <div id="pages" class="right_conter">
+          <pagination v-show="total>0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" class="page"
+               @pagination="getList" />
+        </div> -->
+        <div class="right_bottom">
+          <div class="ss">
+            <ul :class="{'ss_ul' : ssUl}">
+              <li  @click="UpdateDetails" :class="{'notChoose' : singles}" :disabled="single">
+               修改
+              </li>
+              <li  :class="{'notChoose' : multiples}" :disabled="multiple" @click="removeDetailMes">
+               删除
+              </li>
+            </ul>
+          </div>
+          <Tabs value="name1" style="height: 100%;" type="card">
+            <TabPane label="标签一" name="name1" class="aaa" style="height: 100%;">
+              <el-table :data="projectListDetail" @selection-change="handleSelectionChangeDetail" height="100%" max-height="100%">
+                <el-table-column type="selection" align="center" />
+                <el-table-column label="序号" type="index" />
+                <el-table-column label="窗号 " prop="winNo" :show-overflow-tooltip="true" />
+                <el-table-column label="甲方窗号" prop="partyWinNo" :show-overflow-tooltip="true" />
+                <el-table-column label="系列名称" prop="winModelName" :show-overflow-tooltip="true" />
+                <el-table-column label="数量" prop="projectNum" :show-overflow-tooltip="true" />
+                <el-table-column label="单樘暂估量(m²)" prop="preNum" :show-overflow-tooltip="true" />
+                <el-table-column label="总暂估量(m²)" prop="extra1" :show-overflow-tooltip="true" />
+                <el-table-column label="合同单价(元/m²)" prop="contractPrice" :show-overflow-tooltip="true" />
+                <el-table-column label="创建时间" prop="createTime" :show-overflow-tooltip="true" />
+              </el-table>
+            </TabPane>
+            <TabPane label="标签二" name="name2">标签二的内容</TabPane>
+            <TabPane label="标签三" name="name3">标签三的内容</TabPane>
+          </Tabs>
+
+        </div>
+        <!-- <div id="pagess" >
+                <pagination v-show="total1>0" :total="total1" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize" class="page"
+                  @pagination="getList" />
+           </div> -->
+      </div>
+    </div>
+    <!-- 状态维护弹出框 -->
+    <el-dialog :title="title" :visible.sync="maintaining" width="600px" append-to-body>
+      <el-form ref="checkStatusform" :model="checkStatusform" :rules="check" label-width="80px">
+        <el-row>
+          <el-col>
+            <el-form-item label="项目状态" prop="checkStatus">
+              <el-select v-model="checkStatusform.checkStatus" placeholder="请选择">
+                 <el-option v-for="dict in checkstatusOptions" :key="dict.dictValue" :label="dict.dictLabel" :value="dict.dictValue" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col>
+            <el-form-item label="申请人" prop="statusReason">
+              <el-input v-model="checkStatusform.statusReason" placeholder="请输入内容"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col>
+            <el-form-item label="申请原因" prop="applyPerson">
+              <el-input type="textarea" :rows="2" placeholder="请输入内容" v-model="checkStatusform.applyPerson">
+              </el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitcheckstatus">确 定</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </div>
+    </el-dialog>
+    <!-- 指派项目负责人窗口 -->
+    <el-dialog :title="title" :visible.sync="principal" width="600px" append-to-body>
+      <el-form ref="form" :model="form" :rules="rules" label-width="100px">
+        <el-row>
+          <el-col>
+            <el-form-item label="项目负责人">
+              <el-select v-model="form.manager" placeholder="请选择">
+                <el-option v-for="item in managerList" :key="item.projectId" :label="item.nickName" :value="item.userName"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitmanager">确 定</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </div>
+    </el-dialog>
+    <!-- 指派安装组弹窗 -->
+    <el-dialog :title="title" :visible.sync="projecTeam" width="600px" append-to-body>
+      <el-form ref="projectTeamform" :model="projectTeamform" :rules="team" label-width="100px">
+        <el-row>
+          <el-col>
+            <el-form-item label="指派安装班组">
+              <el-select v-model="projectTeamform.installGroup" placeholder="请选择" multiple>
+                <el-option v-for="item in projectTeam" :key="item.projectId" :label="item.deptName" :value="item.deptId"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitprojectTeam">确 定</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </div>
+    </el-dialog>
+    <!-- 项目审核 -->
+    <el-dialog :title="title" :visible.sync="audit" width="600px" append-to-body>
+      <el-form ref="projectAuditform" :model="projectAuditform" label-width="80px">
+        <el-row>
+          <el-col>
+            <el-form-item label="审核状态:">
+              <el-select v-model="projectAuditform.checkStatus" clearable placeholder="请选择">
+                <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
+                </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col>
+            <el-form-item label="驳回理由:">
+              <el-input type="textarea" :rows="2" placeholder="请输入内容" v-model="projectAuditform.remark">
+              </el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitprojectAudit">确 定</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </div>
+    </el-dialog>
+    <!-- 添加详情窗口 -->
+    <el-dialog :title="title" :visible.sync="detail" width="600px" append-to-body>
+      <el-form :model="ruleForm" :rules="rulesForm" ref="ruleForm" label-width="100px" class="demo-ruleForm">
+        <el-form-item label="窗号" prop="winNo">
+          <el-input v-model="ruleForm.winNo"></el-input>
+        </el-form-item>
+        <el-form-item label="甲方窗号" prop="partyWinNo">
+          <el-input v-model="ruleForm.partyWinNo"></el-input>
+        </el-form-item>
+        <el-form-item label="系列名称" prop="winModelName">
+          <el-input v-model="ruleForm.winModelName"></el-input>
+        </el-form-item>
+        <el-form-item label="数量" prop="projectNum">
+          <el-input v-model="ruleForm.projectNum"></el-input>
+        </el-form-item>
+        <el-form-item label="单樘暂估量(m²)" prop="preNum">
+          <el-input v-model="ruleForm.preNum"></el-input>
+        </el-form-item>
+        <el-form-item label="合同单价(元/m²)" prop="contractPrice">
+          <el-input v-model="ruleForm.contractPrice"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitDetail">确 定</el-button>
+        <el-button @click="cancel">取 消</el-button>
+      </div>
+    </el-dialog>
+    <!-- 用户导入对话框 -->
+<el-dialog :title="upload.title" :visible.sync="upload.open" width="400px" append-to-body>
+      <el-upload ref="upload" :limit="1" accept=".xlsx, .xls" :headers="upload.headers" :action="upload.url + '?updateSupport=' + upload.updateSupport"
+        :data="upload.data"
+        :disabled="upload.isUploading" :on-progress="handleFileUploadProgress" :on-success="handleFileSuccess"
+        :auto-upload="false" drag>
+        <i class="el-icon-upload"></i>
+        <div class="el-upload__text">
+          将文件拖到此处，或
+          <em>点击上传</em>
+        </div>
+        <div class="el-upload__tip" slot="tip">
+          <el-checkbox v-model="upload.updateSupport" />是否更新已经存在的用户数据
+          <el-link type="info" style="font-size:12px" @click="importTemplate">下载模板</el-link>
+        </div>
+        <div class="el-upload__tip" style="color:red" slot="tip">提示：仅允许导入“xls”或“xlsx”格式文件！</div>
+      </el-upload>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitFileForm">确 定</el-button>
+        <el-button @click="upload.open = false">取 消</el-button>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+  import {
+    listMes_project,
+    addMes_project,
+    getProjectName,
+    getProjectDetailWinNo,
+    addMes_project_detail,
+    updateMes_project,
+    checkEditMes_project,
+    statusMes_project,
+    editProjecTeamByprojectId,
+    updateMes_project_detail,
+    listMes_project_detail,
+    removeDetailMes_project,
+    importTemplate,
+    importData,
+    getProject,
+    getManager,
+    removeMes_project,
+    getcheckStatus,
+    getProjectType,
+    getMesProjectById,
+    getTeam,
+    releaseProject
+  } from "@/api/project/mes_project.js";
+  import {
+    getToken
+  } from "@/utils/auth";
+  export default {
+    name: 'mes_project',
+    data() {
+      return {
+        addupdate:false,
+        // 子按钮是否显示
+        ssUl:false,
+        show: true,
+        // 用户导入参数
+        upload: {
+          // 是否显示弹出层（用户导入）
+          open: false,
+          // 弹出层标题（用户导入）
+          title: "",
+          // 是否禁用上传
+          isUploading: false,
+          // 是否更新已经存在的用户数据
+          updateSupport: 0,
+
+          // 设置上传的请求头部
+          headers: {
+            Authorization: "Bearer " + getToken()
+          },
+          projectId:undefined,
+          // 上传的地址
+          url: process.env.VUE_APP_BASE_API + "/project/mes_project/importData",
+          data:{projectId:undefined}
+        },
+        // 是否显示弹出层
+        open: false,
+        // 状态维护弹出层
+        maintaining: false,
+        // 判断点击按钮
+        add: false,
+        // 项目负责人弹出层
+        principal: false,
+        projecTeam: false,
+        // 项目审核弹出
+        audit: false,
+        // 添加详情弹出
+        detail: false,
+        // 弹出层标题
+        title: "",
+        // 选中数组
+        ids: [],
+        // 选中详情数组
+        idsDetail:[],
+        // 字典状态翻译
+        checkstatusOptions:[],
+        // 项目类型字典
+        projectTypeOptions:[],
+        projectname: [],
+        // 非单个禁用
+        single: true,
+        // 非多个禁用
+        multiple: true,
+        // 子非单个禁用
+        singles: true,
+        // 子非多个禁用
+        multiples: true,
+        // 项目名称数组
+        projectNameList: [],
+        // 项目状态数组
+        checkStatusList: [],
+        // 项目负责人数组
+        managerList: [],
+        // 项目类型数组
+        projectType: [],
+        // 安装班组数组
+        projectTeam: [],
+        // 角色表格数据
+        mes_projectList: [],
+        // 详细列表数据
+        projectListDetail: [],
+        // 选中数据
+        selectProject: [],
+        // 选中详情数据
+        selectProjectDetail: [],
+        // 总条数
+        total: 0,
+        fileList:[],
+        // 详细列表条数
+        total1: 0,
+        // 日期范围
+        dateRange: [],
+        // 查询参数
+        queryParams: {
+          checkStatus: undefined,
+          manager: undefined,
+          projectName: undefined,
+
+        },
+        form: {},
+        // 表单校验
+        rules: {
+          projectName: [{
+            required: true,
+            message: "项目称不能为空",
+            trigger: "blur"
+          }],
+          projectType: [{
+            required: true,
+            message: "项目类型不能为空",
+            trigger: "blur"
+          }],
+          downTime: [{
+            required: true,
+            message: "开始日期不能为空",
+            trigger: "blur"
+          }],
+          deliveryTime: [{
+            required: true,
+            message: "结束日期不能为空",
+            trigger: "blur"
+          }]
+        },
+        // 项目状态表单
+        checkStatusform: {},
+        // 项目状态表单校验
+        check: {
+          applyPerson: [{
+            required: true,
+            message: "申请人不能为空",
+            trigger: "blur"
+          }],
+          statusReason: [{
+            required: true,
+            message: "申请原因不能为空",
+            trigger: "blur"
+          }]
+        },
+        // 安装班组表单
+        projectTeamform: {},
+        // 安装班组表单校验
+        team: {
+          installGroupName: [{
+            required: true,
+            message: "安装班组不能为空",
+            trigger: "blur"
+          }],
+        },
+        // 项目审核表单
+        projectAuditform: {},
+        options: [{
+          value: '2',
+          label: '审核通过'
+        }, {
+          value: '4',
+          label: '审核驳回'
+        }],
+        ruleForm: {},
+        rulesForm: {
+          winNo: [{
+            required: true,
+            message: '请输入窗号',
+            trigger: 'blur'
+          }, ],
+          partyWinNo: [{
+            required: true,
+            message: '请输入甲方窗号',
+            trigger: 'blur'
+          }, ],
+          winModelName: [{
+            required: true,
+            message: '请输入系列名称',
+            trigger: 'blur'
+          }, ],
+          projectNum: [{
+            required: true,
+            message: '请输入数量',
+            trigger: 'blur'
+          }, ],
+          preNum: [{
+            required: true,
+            message: '请输入单樘暂估量',
+            trigger: 'blur'
+          }, ],
+          contractPrice: [{
+            required: true,
+            message: '请输入合同单价',
+            trigger: 'blur'
+          }, ]
+
+        }
+      }
+    },
+    created() {
+      this.getList()
+      getProject().then(res => {
+        this.projectNameList = res.data;
+      })
+      getManager().then(res => {
+        this.managerList = res.data
+      })
+      getcheckStatus().then(res => {
+        this.checkStatusList = res.data
+
+      })
+      getProjectType().then(res => {
+        this.projectType = res.data
+
+      })
+      // 安装班组
+      getTeam().then(res => {
+        this.projectTeam = res.data
+      })
+      this.getDicts("check_status").then((response) => {
+        this.checkstatusOptions = response.data;
+      });
+      this.getDicts("project_type").then((response) => {
+        this.projectTypeOptions = response.data;
+      });
+    },
+    methods: {
+      // 表单重置
+      reset() {
+        this.form = {
+          projectName: undefined,
+          manager: undefined,
+          downTime: undefined,
+          deliveryTime: undefined,
+          projectType: undefined,
+          installGroup: undefined,
+          installGroupName: undefined
+        };
+        this.resetForm("form");
+      },
+      // 项目状态表单重置
+      checkform() {
+        this.checkStatusform = {
+          projectId: undefined,
+          checkStatus: undefined,
+          applyPerson: undefined,
+          statusReason: undefined
+        };
+        this.resetForm("checkStatusform");
+      },
+      // 安装班组表单重置
+      teamform() {
+        this.projectTeamform = {
+          projectId: undefined,
+          installGroup: undefined,
+          installGroupName: ''
+        };
+        this.resetForm("projectTeamform");
+      },
+      // 项目审核表单重置
+      auditform() {
+        this.projectAuditform = {
+          projectId: undefined,
+          checkStatus: undefined,
+          remark: undefined
+        };
+        this.resetForm("projectAuditform");
+      },
+      detailform() {
+        this.ruleForm = {
+          projectId: undefined,
+          winNo: undefined,
+          partyWinNo: undefined,
+          winModelName: undefined,
+          projectNum: undefined,
+          preNum: undefined,
+          contractPrice: undefined
+        }
+        this.resetForm("ruleForm");
+      },
+      // 查询项目列表
+      getList() {
+        listMes_project(this.queryParams).then(
+            response => {
+
+              this.mes_projectList = response.rows;
+              this.total = response.total;
+
+            }
+          )
+          .catch(req => {
+            console.log(req)
+          })
+      },
+      // 新增按钮
+      handleAdd() {
+        this.addupdate = true
+        this.open = true
+        this.title = "添加项目合同信息";
+      },
+      /** 修改按钮操作 */
+      handleUpdate(row) {
+        this.addupdate = true
+        this.reset()
+        this.open = true;
+        this.title = "修改项目合同信息";
+        const projectId = row.projectId || this.ids;
+        getMesProjectById(projectId).then((response) => {
+          this.form = response.data
+          // this.form.projectName = response.projectName
+          // this.form.manager = response.manager
+          // this.form.downTime = response.downTime
+          // this.form.deliveryTime = response.deliveryTime
+          // this.form.projectType = response.projectType
+          // this.form.projectId = response.projectId
+        });
+
+      },
+      // 删除按钮操作
+      handleDelete() {
+        const projectId = this.ids;
+        this.$confirm('是否确认删除项目名称为"' + this.projectname + '"的数据项?', "警告", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        }).then(function() {
+          return removeMes_project(projectId);
+        }).then(() => {
+          this.getList();
+          this.msgSuccess("删除成功");
+        }).catch(function() {});
+      },
+      // 状态维护
+      MaintainingState() {
+        this.maintaining = true
+        this.title = "状态维护"
+        const projectId =  this.ids;
+        getMesProjectById(projectId).then((response) => {
+          this.checkStatusform = response.data
+        });
+
+      },
+      // 指派项目负责人
+      UpdatePrincipal() {
+        this.principal = true
+        this.title = "指派项目负责人"
+        const projectId = this.ids;
+        getMesProjectById(projectId).then((response) => {
+          this.form.manager = response.manager
+        });
+      },
+      // 指派安装班组
+      ProjecTeam() {
+        this.projecTeam = true
+        this.teamform()
+      },
+      // 项目审核
+      projectAudit() {
+        this.audit = true
+      },
+      // 添加详情按钮
+      addDetails() {
+        this.detail = true
+        this.add = true
+      },
+      // 修改子按钮
+      UpdateDetails() {
+
+        this.add = false
+        this.detail = true
+        this.ruleForm = this.selectProjectDetail[0]
+      },
+      // 删除子按钮
+      removeDetailMes() {
+        this.ruleForm.projectId = this.idsDetail[0]
+        this.$confirm('是否确认子删除项目窗号为"' + this.winNo + '"的数据项?', "警告", {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "warning"
+          }).then(res => {
+            removeDetailMes_project(this.projectDetailId).then(res => {
+              listMes_project_detail(this.ruleForm.projectId).then(res => {
+                this.projectListDetail = res.rows
+              })
+              this.msgSuccess("删除成功");
+            }).catch(req => {
+              console.log(req)
+            })
+          })
+          .catch(req => {
+            console.log(req)
+          })
+      },
+      // 搜索
+      handleQuery() {
+        this.queryParams.pageNum = 1;
+        this.getList();
+      },
+      // 重置
+      resetQuery() {
+        this.queryParams = {
+            pageNum: 1,
+            pageSize: 10,
+            checkStatus: undefined,
+            manager: undefined,
+            projectName: undefined
+
+          },
+          this.handleQuery()
+      },
+      // 多选框选中数据
+      handleSelectionChange(selection) {
+        this.selectProject = selection.map((item) => item)
+        this.ids = selection.map((item) => item.projectId);
+        this.projectname = selection.map(item => item.projectName)
+        this.managers = selection.map(item => item.manager)
+        this.single = selection.length != 1;
+        this.multiple = !selection.length;
+        this.projectDetailId = selection.map((item) => item.projectDetailId)
+        this.as = selection.map((item) => item.checkStatus)
+        let ha = this.as
+        if (ha == 1 || ha == 4 ) {
+          this.show = true
+        } else if (ha == 2 || ha == 3 || ha == 5) {
+          this.show = false
+        }
+      },
+      // 详情多选框选中数据
+      handleSelectionChangeDetail(selection){
+        this.selectProjectDetail = selection.map((item) => item)
+         this.winNo = selection.map((item) => item.winNo)
+         this.idsDetail = selection.map((item) => item.projectId);
+         this.projectDetailId = selection.map((item) => item.projectDetailId)
+         this.as = selection.map((item) => item.checkStatus)
+         this.singles = selection.length != 1;
+         this.multiples = !selection.length;
+
+      },
+      // 项目状态翻译
+      statusFormat(row, column) {
+      return this.selectDictLabel(this.checkstatusOptions, row.checkStatus);
+      },
+      // 项目类型
+      projectTypeFormat(row, column) {
+      return this.selectDictLabel(this.projectTypeOptions, row.projectType);
+      },
+      // 点击列表数据
+      projectDetail(row, column, event) {
+        console.log(row)
+        if(row.checkStatus == 1 || row.checkStatus == 4){
+           this.ssUl = false
+        }else{
+          this.ssUl = true
+        }
+        listMes_project_detail(row.projectId).then(res => {
+          this.projectListDetail = res.rows
+          this.total1 = res.total;
+        })
+
+      },
+      // 提交按钮
+      submitForm() {
+        this.$refs["form"].validate((valid) => {
+          if (valid) {
+            if (this.form.projectId != undefined) {
+              updateMes_project(this.form).then(response => {
+                if (response.code === 200) {
+                  this.msgSuccess("修改成功");
+                  this.open = false;
+                  this.addupdate = false
+                  this.getList();
+                  this.reset()
+                }
+
+              });
+            } else {
+              addMes_project(this.form).then(res => {
+                if (res.code === 200) {
+                  this.msgSuccess("新增成功");
+                  this.addupdate = false
+                  this.getList();
+                  this.reset()
+                  this.open = false
+                }
+              })
+            }
+          }
+
+
+
+        })
+
+      },
+      // 状态维护提交按钮
+      submitcheckstatus() {
+        this.$refs["checkStatusform"].validate((valid) => {
+          if (valid) {
+            if (this.maintaining == true) {
+              this.checkStatusform.projectId = this.ids[0]
+
+              statusMes_project(this.checkStatusform).then(res => {
+
+                this.msgSuccess("状态修改成功");
+                this.getList()
+                this.reset()
+                this.checkform()
+                this.maintaining = false
+              })
+            }
+          }
+        })
+
+      },
+      // 指派负责人提交
+      submitmanager() {
+        this.$refs["form"].validate((valid) => {
+
+          this.form.projectId = this.ids[0]
+
+        })
+        updateMes_project(this.form).then(res => {
+          this.msgSuccess("指派项目负责人成功");
+          this.getList()
+          this.reset()
+          this.principal = false
+        })
+      },
+      // 指派安装班组提交
+      submitprojectTeam() {
+        let aa = this.projectTeam.filter(item => {
+          return this.projectTeamform.installGroup.indexOf(item.deptId) != -1
+        })
+        for (let i = 0; i < aa.length; i++) {
+          if (i > 0) {
+            this.projectTeamform.installGroupName += " "
+          }
+          this.projectTeamform.installGroupName += aa[i].deptName
+        }
+        this.projectTeamform.installGroup += ''
+        this.projectTeamform.projectId = this.ids[0]
+        editProjecTeamByprojectId(this.projectTeamform).then(res => {
+          this.msgSuccess("指派安装组成功");
+          this.getList()
+          this.teamform()
+          this.projecTeam = false
+        })
+      },
+      // 项目审核提交
+      submitprojectAudit() {
+        this.projectAuditform.projectId = this.ids[0]
+        checkEditMes_project(this.projectAuditform).then(res => {
+          this.msgSuccess("项目审核成功");
+          this.getList()
+          this.auditform()
+          this.audit = false
+        })
+      },
+      // 提交审核按钮
+      submitAudit() {
+        let audit = {
+          projectId: this.ids[0],
+          projectName: this.projectname[0]
+        }
+        this.$confirm('提交审核?', '提交审核', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+        }).then(() => {
+          releaseProject(audit).then(res => {})
+          this.$message({
+            type: 'success',
+            message: '提交成功!'
+          });
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: '提交失败'
+          });
+        });
+      },
+      // 添加详情
+      submitDetail() {
+        this.ruleForm.projectId = this.ids[0]
+
+        this.$refs["ruleForm"].validate((valid) => {
+          if (valid) {
+            if (this.add == true) {
+              addMes_project_detail(this.ruleForm).then(res => {
+                if (res.code === 200) {
+                  this.msgSuccess("添加详情成功");
+                  listMes_project_detail(this.ruleForm.projectId).then(res => {
+                    this.projectListDetail = res.rows
+                    this.detail = false
+                    this.detailform()
+                  })
+                }
+              })
+            } else {
+              updateMes_project_detail(this.ruleForm).then(res => {
+                this.msgSuccess("修改详情成功");
+                listMes_project_detail(this.ruleForm.projectId).then(res => {
+                  this.projectListDetail = res.rows
+                  this.detail = false
+                  this.detailform()
+                })
+
+              })
+            }
+          }
+
+        })
+      },
+      /** 导入按钮操作 */
+      handleImport() {
+        this.upload.title = "用户导入";
+        this.upload.open = true;
+        this.upload.data.projectId = this.ids[0]
+      },
+      /** 下载模板操作 */
+      importTemplate() {
+        importTemplate().then((response) => {
+          this.download(response.msg);
+        });
+      },
+      // 文件上传中处理
+      handleFileUploadProgress(event, file, fileList) {
+        this.upload.isUploading = true;
+      },
+      // 文件上传成功处理
+      handleFileSuccess(response, file, fileList) {
+        this.upload.open = false;
+        this.upload.isUploading = false;
+        this.$refs.upload.clearFiles();
+        this.$alert(response.msg, "导入结果", {
+          dangerouslyUseHTMLString: true,
+        });
+        this.getList();
+        listMes_project_detail(this.upload.data.projectId).then(res => {
+          this.projectListDetail = res.rows
+        })
+      },
+      // 提交上传文件
+      submitFileForm() {
+        console.log(this.upload)
+          this.$refs.upload.submit();
+
+      },
+      // 取消提交
+      cancel() {
+        this.addupdate = false
+        this.open = false
+        this.maintaining = false
+        this.principal = false
+        this.projecTeam = false
+        this.audit = false
+        this.detail = false
+        this.reset()
+        this.checkform()
+        this.teamform()
+        this.auditform()
+        this.detailform()
+
+      }
+    }
+  }
+</script>
+
+<style scoped="scoped">
+  .ss_ul{
+    pointer-events: none;
+  }
+  /* 删除修改按钮是否操作 */
+  .notChoose {
+    opacity: 0.8;
+    pointer-events: none;
+  }
+
+  .mes_project {
+    width: 100%;
+    height: 100%;
+  }
+
+  .mes_project_top {
+    background-image: linear-gradient(#5692cf, #00356c);
+    height: 40px;
+    width: 100%;
+
+    padding: 5px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .mes_project_top ul li {
+    float: left;
+    line-height: 28px;
+    color: white;
+    border: 1px solid #5681af;
+    font-size: 12px;
+    height: 28px;
+    /* width: 58px; */
+    min-width: 58px;
+    text-align: center;
+    border-radius: 5px;
+    background-image: linear-gradient(#71a1d2, #174f89);
+    cursor: pointer;
+    margin-left: 5px;
+  }
+
+  .mes_project_top ul li:hover {
+    background-image: linear-gradient(#92bde5, #1f548b);
+  }
+
+  .mes_project_conter {
+    background-color: #FFFFFF;
+    width: 100%;
+    height: 100%;
+    border: 1px solid #c0c0c0;
+    display: flex;
+  }
+
+  .conter_left {
+    width: 18%;
+    height: 100%;
+    border-right: 1px solid #b2b2b2;
+    overflow: auto;
+    background-color: #efefef;
+    font-size: 14px;
+
+  }
+
+  .message {
+    width: 100%;
+    height: 30px;
+    line-height: 30px;
+    font-size: 12px;
+    background-image: linear-gradient(#fdfdfe, #cfd0d1);
+    padding-left: 10px;
+    display: flex;
+    justify-content: space-between;
+    padding-right: 10px;
+
+  }
+
+  .messagenav {
+    color: #2a5b8c;
+    font-weight: 900;
+
+  }
+
+  .conter_right {
+    width: 82%;
+    height: 100%;
+  }
+
+  .page {
+    width: 100%;
+    height: 30px;
+    padding: 0;
+    margin: 0;
+    position: static !important;
+
+  }
+
+  .right_top {
+    width: 100%;
+    height: 40%;
+    /* border-bottom: 1px solid #b2b2b2; */
+    /* overflow: auto; */
+
+  }
+
+  #pagess {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .right_conter {
+    width: 100%;
+    height: 30px;
+  }
+
+  .right_bottom {
+    width: 100%;
+    height: 46%;
+    position: relative;
+    /* padding-bottom: 60px; */
+    /* overflow: auto; */
+  }
+
+  /deep/ .ivu-tabs-content {
+    height: 90%;
+  }
+
+  /deep/ .ivu-tabs-bar {
+    margin: 0;
+  }
+
+  .ss {
+    /* width: 200px;
+    height: 30px; */
+    z-index: 99;
+    position: absolute;
+    right: 200px;
+    top: 1px;
+
+  }
+.ss ul{
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  height: 30px;
+  border: 1px solid #c9c9c9;
+  border-radius: 16px 0px 16px 0px;
+}
+  .ss ul li {
+    float: left;
+    line-height: 30px;
+    text-align: center;
+    width: 80px;
+    height: 30px;
+
+  }
+  .ss ul li:nth-child(1){
+    border-right:1px solid #c9c9c9;
+  }
+</style>
+<style>
+  #pages .pagination-container {
+    padding: 0 !important;
+    margin: 0;
+    position: static !important;
+  }
+
+  #pages .page .el-pagination .is-background {
+    position: static !important;
+  }
+
+  #pages .page .acba {
+    position: static;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  #pagess .pagination-container {
+    padding: 0 !important;
+    margin: 0;
+    position: static !important;
+  }
+
+  #pagess .page .el-pagination .is-background {
+    position: static !important;
+  }
+
+  #pagess .page .acba {
+    position: static;
+    display: flex;
+    justify-content: flex-end;
+  }
+</style>

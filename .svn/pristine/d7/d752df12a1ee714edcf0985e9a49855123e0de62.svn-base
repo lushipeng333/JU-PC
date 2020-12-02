@@ -1,0 +1,357 @@
+<template>
+  <div class="foorter">
+    <div class="navigation_bottom">
+      <div class="left">
+        <!-- <span>当前位置：功能导航</span> -->
+      </div>
+      <div class="right">
+        <ul>
+          <li>聚辉门窗 {{user.nickName}}</li>
+          <li class="three">
+            <el-popover placement="top-end"  trigger="click" popper-class="pop-div">
+              <ul>
+                <li>{{user.nickName}},您好！ 聚辉门窗</li>
+                <li>{{ nowDate }} </li>
+                <li @click="modal10 = true">注销</li>
+              </ul>
+              <span slot="reference">
+                <i class="el-icon-user-solid"></i>
+                <i class="el-icon-caret-top"></i>
+              </span>
+            </el-popover>
+            <Modal title="注销登录" v-model="modal10" cancel-text="否(N)" ok-text="是(Y)" width="366px" @on-ok="gologin"
+              :mask-closable="false" class-name="vertical-center-modal">
+              <div><img src="../../assets/popup/doubt.png" alt=""></div>
+              <div>注销登录将关闭所有已打开的功能窗口,您确定要注销登录吗？</div>
+            </Modal>
+            <!-- <i class="el-icon-user-solid"></i>
+					<i class="el-icon-caret-top"></i> -->
+          </li>
+          <!-- <li class="two" @click="twoClick">
+					<el-popover placement="top-end" popper-class="popop" trigger="click">
+						<ul>
+							<li v-for="(item,index) in twoli" :key="index" :title="item.value">{{item.value}}</li>
+						</ul>
+						<span slot="reference">
+							<i class="el-icon-question"></i>
+							<i class="el-icon-caret-top"></i>
+						</span>
+					</el-popover>
+				</li> -->
+          <!-- <li class="one" @click="oneClick">
+					<el-popover popper-class="pop" placement="top-end" trigger="click">
+						<ul>
+							<li v-for="(item,index) in oneli" :key="index" :title="item.value">{{item.value}}</li>
+						</ul>
+						<i class="el-icon-caret-top" slot="reference"></i>
+					</el-popover>
+				</li> -->
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+</template>
+
+<script>
+  import {
+    mapGetters
+  } from 'vuex'
+  import Breadcrumb from '@/components/Breadcrumb'
+  import Hamburger from '@/components/Hamburger'
+  import Screenfull from '@/components/Screenfull'
+  import SizeSelect from '@/components/SizeSelect'
+  import Search from '@/components/HeaderSearch'
+  import RuoYiGit from '@/components/RuoYi/Git'
+  import RuoYiDoc from '@/components/RuoYi/Doc'
+  import {
+    getUserProfile
+  } from "@/api/system/user";
+
+  export default {
+    components: {
+      Breadcrumb,
+      Hamburger,
+      Screenfull,
+      SizeSelect,
+      Search,
+      RuoYiGit,
+      RuoYiDoc,
+    },
+    computed: {
+      ...mapGetters([
+        'sidebar',
+        'avatar',
+        'device'
+      ]),
+      setting: {
+        get() {
+          return this.$store.state.settings.showSettings
+        },
+        set(val) {
+          this.$store.dispatch('settings/changeSetting', {
+            key: 'showSettings',
+            value: val
+          })
+        }
+      }
+    },
+    name: 'foorter',
+    data() {
+      return {
+        nowDate: "", // 当前日期
+        user: {},
+        modal10: false,
+      }
+    },
+    created() {
+      this.getUser();
+    },
+    methods: {
+      currentTime() {
+        setInterval(this.formatDate, 500);
+      },
+      formatDate() {
+        let date = new Date();
+        let year = date.getFullYear(); // 年
+        let month = date.getMonth() + 1; // 月
+        let day = date.getDate(); // 日
+        let week = date.getDay(); // 星期
+        let weekArr = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+        let hour = date.getHours(); // 时
+        hour = hour < 10 ? "0" + hour : hour; // 如果只有一位，则前面补零
+        let minute = date.getMinutes(); // 分
+        minute = minute < 10 ? "0" + minute : minute; // 如果只有一位，则前面补零
+        let second = date.getSeconds(); // 秒
+        second = second < 10 ? "0" + second : second; // 如果只有一位，则前面补零
+        this.nowDate = `${year}/${month}/${day} ${hour}:${minute}:${second} ${weekArr[week]}`;
+      },
+      getUser() {
+        getUserProfile().then(response => {
+          console.log(response)
+          this.user = response.data
+        });
+      },
+      // 注销登录
+      gologin() {
+        this.$store.dispatch('LogOut').then(() => {
+          location.href = '/index';
+        })
+
+
+      },
+    },
+    mounted() {
+      this.currentTime();
+    },
+    // 销毁定时器
+    beforeDestroy() {
+      if (this.formatDate) {
+        clearInterval(this.formatDate); // 在Vue实例销毁前，清除时间定时器
+      }
+    }
+  }
+</script>
+
+<style scoped="scoped">
+  .navigation_bottom {
+    z-index: 1000;
+    width: calc(100% - 182px);
+    height: 24px;
+    background-image: linear-gradient(#fefefe, #ececee);
+    position: fixed;
+    bottom: 0px;
+    display: flex;
+    justify-content: space-between;
+    line-height: 24px;
+    border: 1px solid #bfc0c2;
+    border-width: 1px 0px 0px 1px;
+  }
+
+  .navigation_bottom ul li {
+    list-style: none;
+    float: left;
+    border: 1px solid #b2b2b2;
+    border-width: 0px 0px 0px 1px;
+    text-align: center;
+    padding-left: 20px;
+    padding-right: 20px;
+
+  }
+
+  .navigation_bottom ul li:nth-child(1) {
+    font-size: 0.8125rem;
+  }
+
+  .navigation_bottom .right {}
+
+  .three,
+  .two,
+  .one {
+    font-size: 1rem;
+    color: #528dcc;
+  }
+</style>
+<style lang="scss">
+  .el-popover.pop-div {
+    background-image: linear-gradient(#dbedff, #acd5ff, #a1d1ff);
+    width: 210px;
+    height: 240px;
+    border-radius: 0px 20px 0px 20px;
+    border: 1px solid #76a8d6;
+    /* text-align: center; */
+
+    /*  */
+  }
+
+  .el-popover.pop-div ul li {
+    /* margin-left: 17px; */
+    padding-left: 17px;
+    font-size: 0.75rem;
+    color: #096cbf;
+    margin-top: 5px;
+  }
+
+  .el-popover.pop-div ul li:hover {
+    background-image: linear-gradient(#9ac4ec, #83b1dd);
+    color: white;
+  }
+
+  .popper__arrow {
+    transform: rotate(90deg);
+    content: none;
+    display: none !important;
+  }
+
+  .el-popover.pop-div {
+    height: 100px !important;
+    width: 270px;
+    border-radius: 0px 20px 0px 20px;
+  }
+
+  .popop {
+    width: 200px;
+    height: 200px;
+    border-radius: 0px 20px 0px 20px;
+  }
+
+  /* 弹出框 */
+  .ivu-modal-content {
+    border: 2px solid #3d8fe3 !important;
+    width: 350px;
+    height: 200px;
+    background-color: #ededed;
+  }
+
+  .vertical-center-modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .ivu-modal {
+      top: 0;
+    }
+  }
+
+  .ivu-modal-header {
+    padding: 0;
+    width: 100%;
+    height: 26px;
+    background-image: linear-gradient(#86c1fb, #3d8fe3);
+  }
+
+  .ivu-modal-header-inner {
+    color: white;
+    font-size: 0.875rem;
+    line-height: 26px;
+    padding-left: 20px;
+  }
+
+  .ivu-modal-close {
+    background-color: #3377bd;
+    position: absolute;
+    top: 0px;
+    right: 2px;
+    width: 24px;
+    height: 20px;
+    text-align: center;
+  }
+
+  .ivu-icon .ivu-icon-ios-close {
+    color: white;
+
+  }
+
+  .ivu-modal-close .ivu-icon-ios-close {
+    font-size: 1.5625rem;
+    color: white;
+    position: relative;
+    top: -2px;
+  }
+
+  .ivu-modal-footer {
+    padding: 0;
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    width: 100%;
+    border-top: 1px solid #7f9db9;
+    padding: 10px;
+  }
+
+  .ivu-btn-primary {
+    color: #404042;
+    background-color: #EDEDED;
+    border-color: #EDEDED;
+  }
+
+  .ivu-modal-body {
+    display: flex;
+  }
+
+  .ivu-modal-body div:nth-child(1) {
+    margin-right: 16px;
+  }
+
+  .ivu-modal-close,
+  .ivu-icon-ios-close:hover {
+    color: none;
+  }
+
+  .ivu-btn-text:hover {
+    color: #2162a6;
+    background-color: #d8ecff;
+    border-color: #4da1f4;
+  }
+
+  .ivu-btn-primary:hover {
+    color: #2162a6;
+    background-color: #d8ecff;
+    border-color: #4da1f4;
+  }
+
+  .ivu-btn {
+    height: 20px;
+    /* margin: 10px; */
+    border: 1px solid #bfbfbf;
+    color: #404042;
+    border-radius: 6px;
+    padding: 0px 10px 0px 10px;
+  }
+
+  .ivu-modal-body {
+    color: #000000;
+  }
+
+  .ivu-modal {
+    width: auto;
+    margin: 0 auto;
+    position: relative;
+    outline: 0;
+    top: 0px;
+  }
+
+  .ivu-modal {
+    width: 100%;
+  }
+</style>

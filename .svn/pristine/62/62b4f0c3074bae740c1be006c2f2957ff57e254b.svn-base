@@ -1,0 +1,19 @@
+import request from '@/utils/request'
+
+// 全部窗号查询
+export function Allwindow(query){
+  return request({
+    url: '/project/project_process/getWinModel',
+    method: 'get',
+    params: query
+  })
+}
+
+// 列表查询
+export function project_processList(data){
+  return request({
+    url: '/project/project_process/list',
+    method: 'post',
+    data: data
+  })
+}

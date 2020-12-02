@@ -1,0 +1,1092 @@
+<template>
+  <div class="project_changefiles">
+    <div class="project_changefiles_top">
+      <ul v-show="Show">
+        <li @click="handleAdd">新增</li>
+        <li @click="handleUpdate" :class="{'notChoose' : single}" :disabled="single">修改</li>
+        <li :class="{'notChoose' : single}" :disabled="single" @click="handleDelete">删除</li>
+        <li @click="projectAudit" :class="{'notChoose' : single}" :disabled="single">审核</li>
+        <li @click="handleImport" :class="{'notChoose' : single}" :disabled="single">上传附件</li>
+      </ul>
+     <ul v-show="!Show">
+      	<li @click="submitForm">保存</li>
+      	<li class="celloff" @click="cancel">取消</li>
+      </ul>
+    </div>
+    <div class="project_changefiles_conter">
+       <div class="hideshow" v-show="!Show">
+         <div class="showtop">
+           <el-form ref="form" :model="form" :rules="rules" label-width="100px" style="padding-right: 10px;" >
+               <el-row>
+                  <el-col :span="8">
+               <el-form-item label="变更类型" prop="changeType">
+               <el-select v-model="form.changeType" placeholder="请选择变更类型" :disabled="audit">
+                  <el-option v-for="dict in changeTypeOptions" :key="dict.dictValue" :label="dict.dictLabel" :value="dict.dictValue" />
+               </el-select>
+             </el-form-item>
+             </el-col>
+             <el-col :span="8">
+               <el-form-item label="项目名称" prop="projectId" v-if="add">
+               <el-select v-model="form.projectId" placeholder="请选择项目名称" :disabled="!add" @change="projectaddid"  >
+                 <el-option v-for="dict in projectNameList" :key="dict.projectId" :label="dict.projectName" :value="dict.projectId" />
+               </el-select>
+             </el-form-item>
+             <el-form-item label="项目名称" prop="projectId" v-else>
+               <el-select v-model="form.projectName" placeholder="请选择项目名称" :disabled="!add" @change="projectaddid">
+                 <el-option v-for="dict in projectNameList" :key="dict.projectId" :label="dict.projectName" :value="dict.projectId" />
+               </el-select>
+             </el-form-item>
+             </el-col>
+             <el-col :span="8">
+               <el-form-item label="合同名称" prop="changefilesName">
+               <el-input  v-model="form.changefilesName" :readonly="audit"></el-input>
+             </el-form-item>
+             </el-col>
+               </el-row>
+            <el-row>
+             <el-col :span="8">
+               <el-form-item label="合同变更号" prop="changefilesId">
+               <el-input v-model="form.changefilesId" :readonly="audit"></el-input>
+             </el-form-item>
+             </el-col>
+             <el-col :span="8">
+                <el-form-item label="合同变更日期" prop="changeDate">
+               <el-date-picker
+               :readonly="audit"
+                   v-model="form.changeDate"
+                   type="date"
+                   placeholder="选择日期">
+                 </el-date-picker>
+             </el-form-item>
+             </el-col>
+            <el-col :span="8">
+              <el-form-item label="合同变更原因:" prop="changeReason">
+               <el-input :readonly="audit" v-model="form.changeReason" placeholder="请输入内容"></el-input>
+             </el-form-item>
+            </el-col>
+             </el-row>
+           </el-form>
+         </div>
+         <div class="showbottom">
+           <div class="btnc">
+             <P>
+               <el-button v-show="!audit" size="mini" @click.prevent="addRow()">增加行</el-button>
+             </P>
+             <p>
+               <el-button v-show="!audit" size="mini" @click.prevent="delData()">删除行</el-button>
+             </p>
+           </div>
+           <Tabs value="name1" style="height: 100%;" type="card">
+             <TabPane label="合同详细信息" name="name1" style="height: 100%;">
+               <el-form :model="modificationform" ref="modificationform"  :inline="true">
+                 <el-table :data="modificationform.modificationlist" @selection-change="selectRow"
+                   height="94%" max-height="94%" ref="table"
+                   :row-style="{height:'35px'}"
+                   :cell-style="{padding:'0px'}"
+                   :header-cell-style="{padding:'0px'}"
+                   border
+                   :cell-class-name="cellClassName">
+                   <el-table-column type="selection" align="center" />
+                   <el-table-column label="序号" align="center" type="index" />
+                   <el-table-column label="变更类型 ">
+                     <template slot-scope="scope">
+                       <el-form-item  :prop="'modificationlist.'+scope.$index+'.changefilesStatus'" :rules="verify.changefilesStatus">
+                         <el-select :disabled="audit" v-model="scope.row.changefilesStatus"  @change="Statuschange" >
+                           <el-option v-for="dict in changefilesStatusOptions" :key="dict.dictValue" :label="dict.dictLabel" :value="dict.dictValue"></el-option>
+                         </el-select>
+                       </el-form-item>
+                     </template>
+                   </el-table-column>
+                   <el-table-column label="窗号 ">
+                     <template slot-scope="scope">
+                       <el-form-item :prop="'modificationlist.'+scope.$index+'.winNo'" :rules="verify.winNo"
+                         :inline-message="true">
+                         <el-input v-model="scope.row.winNo" :readonly="audit"   @change="DetailWinNo(scope.$index ,scope)"></el-input>
+                       </el-form-item>
+                     </template>
+                   </el-table-column>
+                   <el-table-column label="甲方窗号">
+                     <template slot-scope="scope">
+                       <el-form-item :prop="'modificationlist.'+scope.$index+'.partyWinNo'" :rules="verify.partyWinNo"
+                         :inline-message="true">
+                         <el-input v-model="scope.row.partyWinNo" :readonly="audit" :disabled="addDisabled"></el-input>
+                       </el-form-item>
+                     </template>
+                   </el-table-column>
+                   <el-table-column label="窗型系列名称">
+                     <template slot-scope="scope">
+                       <el-form-item :prop="'modificationlist.'+scope.$index+'.winModelName'" :rules="verify.winModelName"
+                         :inline-message="true">
+                         <el-input :disabled="addDisabled" :readonly="audit" v-model="scope.row.winModelName"></el-input>
+                       </el-form-item>
+                     </template>
+                   </el-table-column>
+                   <el-table-column label="数量差">
+                     <template slot-scope="scope">
+                       <el-form-item :prop="'modificationlist.'+scope.$index+'.numDiscrepancy'" :rules="verify.numDiscrepancy"
+                         :inline-message="true">
+                         <el-input  v-model="scope.row.numDiscrepancy" onkeyup="value=value.replace(/[^\d]/g,'')" :readonly="audit"></el-input>
+                       </el-form-item>
+                     </template>
+                   </el-table-column>
+                   <el-table-column label="暂估量差">
+                     <template slot-scope="scope">
+                       <el-form-item :prop="'modificationlist.'+scope.$index+'.provisionalDiscrepancy'" :rules="verify.provisionalDiscrepancy"
+                         :inline-message="true">
+                         <el-input  v-model="scope.row.provisionalDiscrepancy" @keyup.native="onlyNumber(scope)" :readonly="audit"></el-input>
+                       </el-form-item>
+                     </template>
+                   </el-table-column>
+                   <el-table-column label="合同单价差">
+                     <template slot-scope="scope">
+                       <el-form-item :prop="'modificationlist.'+scope.$index+'.contractPriceDiscrepancy'" :rules="verify.contractPriceDiscrepancy"
+                         :inline-message="true">
+                         <el-input  v-model="scope.row.contractPriceDiscrepancy" @keyup.native="onlyNumber(scope)" :readonly="audit"></el-input>
+                       </el-form-item>
+                     </template>
+                   </el-table-column>
+                 </el-table>
+               </el-form>
+
+             </TabPane>
+
+           </Tabs>
+         </div>
+         <div class="showconter">
+           <el-form ref="projectAuditform" :model="projectAuditform" label-width="100px">
+             <el-row>
+               <el-col :span="6">
+                 <el-form-item label="创建人:">
+                  <el-input v-model="lister" readonly></el-input>
+                 </el-form-item>
+               </el-col>
+               <el-col :span="6">
+                 <el-form-item label="创建日期:">
+                  <el-input v-model="tabulationdata" readonly></el-input>
+                 </el-form-item>
+               </el-col>
+               <el-col :span="6">
+                 <el-form-item label="审核状态:">
+                   <el-select v-model="projectAuditform.checkStatus" clearable placeholder="请选择" :disabled="!audit">
+                     <el-option v-for="dict in checkStatusOptions" :key="dict.dictValue" :label="dict.dictLabel" :value="dict.dictValue"></el-option>
+                   </el-select>
+                 </el-form-item>
+               </el-col>
+               <el-col :span="6">
+                 <el-form-item label="审核原因:">
+                   <el-input
+                   type="textarea"
+                   :rows="1"
+                   :readonly="!audit" placeholder="请输入内容" v-model="projectAuditform.checkContent">
+                   </el-input>
+                 </el-form-item>
+               </el-col>
+             </el-row>
+           </el-form>
+         </div>
+       </div>
+      <div class="conter_left" v-show="Show">
+        <div class="left_top">
+          <div class="message">
+            <div class="messagenav">
+              查询方案
+            </div>
+          </div>
+          <div class="top_content" style="width: 100%; text-align: center;">
+            <ul>
+              <li @click="examine" :class="{'contentli' : lefttopli1}">待审批</li>
+              <li @click="amend" :class="{'contentli' : lefttopli2}">待修改</li>
+            </ul>
+          </div>
+        </div>
+        <div class="left_bottom">
+         <div class="message">
+          <div class="messagenav">
+            快速查询
+          </div>
+        </div>
+        <el-form :model="queryParams" ref="queryForm" :inline="true">
+          <el-form-item label="项目名称">
+            <el-select v-model="queryParams.projectId" clearable placeholder="请选择">
+            <el-option v-for="dict in projectNameList" :key="dict.projectId" :label="dict.projectName" :value="dict.projectId" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="变更类型">
+            <el-select v-model="queryParams.changeType" clearable placeholder="请选择">
+              <el-option
+                    v-for="dict in changeTypeOptions"
+                    :key="dict.dictValue" :label="dict.dictLabel" :value="dict.dictValue">
+                  </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="审核状态">
+            <el-select v-model="queryParams.checkStatus" clearable placeholder="请选择">
+              <el-option
+                    v-for="dict in checkStatusOptions"
+                    :key="dict.dictValue" :label="dict.dictLabel" :value="dict.dictValue">
+                  </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="cyan" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+          </el-form-item>
+        </el-form>
+        </div>
+
+      </div>
+      <div class="conter_right" v-show="Show">
+          <div class="right_top">
+            <el-table :data="project_changeList"  @row-click="projectDetail" height="100%"
+            highlight-current-row
+              max-height="100%" style="width: 100%" border>
+              <el-table-column label="序号" type="index" />
+              <el-table-column label="原项目名称" width="100" prop="projectName" :show-overflow-tooltip="true" />
+              <el-table-column label="合同名称" prop="changefilesName" :show-overflow-tooltip="true" />
+              <el-table-column label="合同变更号" width="100" prop="changefilesId" :show-overflow-tooltip="true" />
+              <el-table-column label="变更类型" prop="changeType" :show-overflow-tooltip="true" :formatter="changeTypeFormat" />
+              <el-table-column label="合同变更原因" width="120" prop="changeReason" :show-overflow-tooltip="true" />
+              <el-table-column label="合同变更日期" width="120" prop="changeDate" :show-overflow-tooltip="true" />
+              <!-- 可点击 -->
+              <el-table-column label="变更附件" prop="changefilesUrl" :show-overflow-tooltip="true" >
+                 <template slot-scope="scope">
+                    <a class="table_a" v-if="scope.row.changefilesUrl != null" target="_blank" :href="'http://192.168.1.123:8080'+scope.row.changefilesUrl">{{ scope.row.changefilesName}}.PDF</a>
+                      </template>
+              </el-table-column>
+              <el-table-column label="审核状态" prop="checkStatus" :show-overflow-tooltip="true" :formatter="checkStatusFormat" />
+              <el-table-column label="审核原因" prop="checkContent" :show-overflow-tooltip="true" />
+              <el-table-column label="创建时间" prop="createTime" :show-overflow-tooltip="true" />
+            </el-table>
+          </div>
+          <div class="right_bottom">
+            <Tabs value="name1" style="height: 100%;" type="card">
+              <TabPane label="合同变更详细" name="name1" class="aaa" style="height: 100%;">
+                <el-table :data="projectListDetail"  height="100%" max-height="100%" border>
+                  <el-table-column label="序号" type="index" />
+                  <el-table-column label="变更类型 " prop="changefilesStatus" :show-overflow-tooltip="true" :formatter="changefilesStatusFormat"/>
+                  <el-table-column label="窗号" prop="winNo" :show-overflow-tooltip="true" />
+                  <el-table-column label="甲方窗号" prop="partyWinNo" :show-overflow-tooltip="true" />
+                  <el-table-column label="窗型系列名称" width="120" prop="winModelName" :show-overflow-tooltip="true" />
+                  <el-table-column label="数量差" prop="numDiscrepancy" :show-overflow-tooltip="true" />
+                  <el-table-column label="暂估量差" prop="provisionalDiscrepancy" :show-overflow-tooltip="true" />
+                  <el-table-column label="合同单价差" width="100" prop="contractPriceDiscrepancy" :show-overflow-tooltip="true" />
+                  <el-table-column label="合同金额差" width="100" prop="sumPriceDiscrepancy" :show-overflow-tooltip="true" />
+                  <el-table-column label="创建时间" prop="createTime" :show-overflow-tooltip="true" />
+                  <el-table-column label="备注" prop="remark" :show-overflow-tooltip="true" />
+                </el-table>
+              </TabPane>
+              <TabPane label="标签二" name="name2">标签二的内容</TabPane>
+              <TabPane label="标签三" name="name3">标签三的内容</TabPane>
+            </Tabs>
+
+          </div>
+      </div>
+    </div>
+    <!-- 用户导入对话框 -->
+    <el-dialog :title="upload.title" :visible.sync="upload.open" width="400px" append-to-body>
+          <el-upload ref="upload" :limit="1" accept=".PDF" :headers="upload.headers" :action="upload.url + '?updateSupport=' + upload.updateSupport"
+            :data="upload.data"
+            :disabled="upload.isUploading" :on-progress="handleFileUploadProgress" :on-success="handleFileSuccess"
+            :auto-upload="false" drag>
+            <i class="el-icon-upload"></i>
+            <div class="el-upload__text">
+              将文件拖到此处，或
+              <em>点击上传</em>
+            </div>
+            <div class="el-upload__tip" style="color:red" slot="tip">提示：仅允许导入"PDF"格式文件！</div>
+          </el-upload>
+          <div slot="footer" class="dialog-footer">
+            <el-button type="primary" @click="submitFileForm">确 定</el-button>
+            <el-button @click="upload.open = false">取 消</el-button>
+          </div>
+        </el-dialog>
+  </div>
+</template>
+
+<script>
+  import {
+    listchangeFiles,
+    getProject,
+    Addchangefiles,
+    changefilesAdd,
+    listproject_detail,
+    listchange_detail,
+    getProjectChangefilesDetailsById,
+    removeProject_changefiles,
+    removeDetailchangefiles_project,
+    addchangefilesDetails,
+    getProjectDetailWinNo,
+    updateChangefilesDetails,
+    checkProjectChange,
+     getInfo,
+  } from "@/api/project/project_changefiles.js";
+
+import { getToken } from "@/utils/auth";
+
+import {
+    onlyNumOnePoint
+  } from "../../../../public/index.js";
+
+  export default {
+    name: 'project_changefiles',
+    data() {
+      return {
+        // 待审批
+        lefttopli1: false,
+        // 待修改
+        lefttopli2: false,
+        // 制表人内容
+        lister:"",
+        // 制表日期
+        tabulationdata:"",
+        // 新增数据projectid
+        projectidadd:'',
+        // 下拉框值
+        alterationNum:'',
+        // 增加删除行
+        selectlistRow:[],
+        // 新增-修改数组
+        modificationform: {
+          changefilesId: undefined,
+          modificationlist: []
+        },
+        // 表单校验
+        verify: {
+          winNo: [{
+            required: true,
+            message: "*",
+            trigger: "blur"
+          }],
+          partyWinNo: [{
+            required: true,
+            message: "*",
+            trigger: "blur"
+          }],
+          winModelName: [{
+            required: true,
+            message: "*",
+            trigger: "blur"
+          }],
+          numDiscrepancy: [{
+            required: true,
+            message: "*",
+            trigger: "blur"
+          }],
+          provisionalDiscrepancy: [{
+            required: true,
+            message: "*",
+            trigger: "blur"
+          }],
+          contractPriceDiscrepancy: [{
+            required: true,
+            message: "*",
+            trigger: "blur"
+          }]
+        },
+        // 用户导入参数
+        upload: {
+          // 是否显示弹出层（用户导入）
+          open: false,
+          // 弹出层标题（用户导入）
+          title: "",
+          // 是否禁用上传
+          isUploading: false,
+          // 是否更新已经存在的用户数据
+          updateSupport: 0,
+          // 设置上传的请求头部
+          headers: { Authorization: "Bearer " + getToken() },
+          // 上传的地址
+          url: process.env.VUE_APP_BASE_API + "/project/changefiles/uploadfile",
+          data:{id:undefined}
+        },
+        // 项目审核弹出
+        audit: false,
+        // 甲方窗号和窗号系列名称禁用状态
+        addDisabled:false,
+        // 输入框禁用
+        disabled:true,
+        // 弹出层标题
+        title: "",
+        // 判断点击按钮
+        add: false,
+        // 变更状态字典数据
+        changeTypeOptions:[],
+        // 审核状态字典数据
+        checkStatusOptions:[],
+        // 变更类型字典数据
+        changefilesStatusOptions:[],
+        // 合同名称
+        changefilesname: [],
+        // 点击当前行projectid
+        projectid: undefined,
+        // 点击当前行id
+        ID:'',
+        // 表单参数
+        form: {},
+        // 表单校验
+        rules: {
+                changeType: [
+                  { required: true, message: "变更类型不能为空", trigger: "blur" },
+                ],
+                projectId: [
+                  { required: true, message: "项目名称不能为空", trigger: "blur" },
+                ],
+                changefilesName: [
+                  { required: true, message: "合同名称不能为空", trigger: "blur" },
+                ],
+                changefilesId: [
+                  { required: true, message: "合同变更号不能为空", trigger: "blur" },
+                ],
+                changeDate: [
+                  { required: true, message: "合同变更日期不能为空", trigger: "blur" },
+                ],
+                changeReason: [
+                  { required: true, message: "合同变更原因不能为空", trigger: "blur" },
+                ],
+              },
+        // 详细列表数据
+        projectListDetail: [],
+        // 项目变更列表数据
+        project_changeList:[],
+        // 新增修改
+        Show:true,
+        // 非单个禁用
+        single: true,
+        // 项目名称数组
+        projectNameList: [],
+        // 查询参数
+        queryParams: {
+          changefilesStatus:undefined,
+          projectName:undefined,
+          changeType:undefined,
+          checkStatus:undefined
+        },
+        projectAuditform:{},
+        // 详细列表条数
+        index: 0,
+      }
+    },
+    created() {
+       this.getDicts("change_type").then(response =>{
+         this.changeTypeOptions = response.data;
+
+       })
+       this.getDicts("project_change_check").then(response =>{
+          this.checkStatusOptions = response.data;
+       })
+       this.getDicts("alter_type").then(response =>{
+          this.changefilesStatusOptions = response.data;
+       })
+       getProject().then(res => {
+         this.projectNameList = res.data;
+       })
+    },
+    methods: {
+      // 暂估量差验证
+      onlyNumOnePoint,
+      onlyNumber(scope) {
+        scope.row.provisionalDiscrepancy = this.onlyNumOnePoint(scope.row.provisionalDiscrepancy);
+        scope.row.contractPriceDiscrepancy = this.onlyNumOnePoint(scope.row.contractPriceDiscrepancy);
+      },
+      // 表单重置
+      reset() {
+        this.form = {
+          changeType: undefined,
+          projectName: undefined,
+          changefilesName: undefined,
+          changefilesId: undefined,
+          changeDate: undefined,
+          changeReason: undefined
+        };
+        this.resetForm("form");
+      },
+      detailform() {
+        this.ruleForm = {
+          changefilesStatus:undefined,
+          projectId: undefined,
+          winNo: undefined,
+          changefilesId: undefined,
+          numDiscrepancy: undefined,
+          provisionalDiscrepancy: undefined,
+          contractPriceDiscrepancy: undefined,
+          partyWinNo:undefined,
+          winModelName:undefined
+        }
+        this.resetForm("ruleForm");
+      },
+      // 项目审核表单重置
+      auditform() {
+        this.projectAuditform = {
+          id: undefined,
+          checkStatus: undefined,
+          checkContent: undefined
+        };
+        this.resetForm("projectAuditform");
+      },
+      // 新增修改表单重置
+      modform() {
+        this.modificationform = {
+          changefilesId: undefined,
+          modificationlist: []
+        }
+        this.resetForm("modificationform");
+      },
+      // 查询列表
+          getList(){
+          listchangeFiles(this.queryParams).then(
+            response => {
+           this.project_changeList = response.rows;
+            }
+          )
+          .catch(req =>{console.log(req)})
+      },
+
+      // 修改按钮
+      handleUpdate() {
+        this.audit = false
+        this.addDisabled = true
+         this.add = false
+         this.Show = false
+         listchange_detail(this.ID).then(res =>{
+           this.form = res.data
+           this.lister = res.data.nickName
+           this.tabulationdata = res.data.createTime
+         })
+         listproject_detail(this.ID).then(res => {
+           this.modificationform.modificationlist = res.rows
+           // this.total1 = res.total;
+         })
+      },
+      // 获取表格选中时的数据
+      selectRow(val) {
+        this.selectlistRow = val
+      },
+      // 增加行
+      addRow() {
+        this.index += 1;
+        var list = {
+          index: this.index,
+          winNo: '',
+          changefilesStatus:'',
+          partyWinNo: '',
+          winModelName: '',
+          contractPriceDiscrepancy: '',
+          provisionalDiscrepancy:'',
+          numDiscrepancy:'',
+          projectId:this.projectid
+        };
+        this.modificationform.modificationlist.push(list)
+
+      },
+      // 新增按钮
+      handleAdd() {
+        getInfo().then(res =>{
+          this.lister = res.user.nickName
+        })
+           this.tabulationdata = ''
+           this.projectidadd = ''
+           this.modificationform.modificationlist = []
+           this.addDisabled = true
+           this.Show = false
+           this.add = true
+           this.audit = false
+           this.detailform()
+           this.addRow()
+      },
+      // 删除方法
+      // 删除选中行
+      delData() {
+
+        for (let i = 0; i < this.selectlistRow.length; i++) {
+          let val = this.selectlistRow
+          val.forEach((val, index) => {
+
+            this.modificationform.modificationlist.forEach((v, i) => {
+              if (val.index === v.index) {
+                // i 为选中的索引
+                this.modificationform.modificationlist.splice(i, 1)
+              }
+            })
+          })
+        }
+        // 删除完数据之后清除勾选框
+        this.$refs.table.clearSelection()
+      },
+      // 删除按钮
+      handleDelete() {
+        const Id = this.ID
+        this.$confirm('是否确认删除合同名称为"' + this.changefilesname + '"的数据项?', "警告", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        }).then(function() {
+          return removeProject_changefiles(Id);
+        }).then(() => {
+          this.getList();
+          this.msgSuccess("删除成功");
+        }).catch(function() {});
+      },
+      // 审核状态
+      projectAudit() {
+       this.Show = false
+       this.audit = true
+       listchange_detail(this.ID).then(res =>{
+         this.form = res.data
+         this.lister = res.data.nickName
+         this.tabulationdata = res.data.createTime
+       })
+       listproject_detail(this.ID).then(res => {
+         this.modificationform.modificationlist = res.rows
+         // this.total1 = res.total;
+       })
+      },
+      // 上传附件
+      handleImport() {
+        this.upload.title = "用户导入";
+        this.upload.open = true;
+        this.upload.data.id = this.ID
+      },
+      // 搜索
+      handleQuery() {
+        this.lefttopli1 = false
+        this.lefttopli2 = false
+        this.getList();
+      },
+      // 待审批
+      examine() {
+        let form = {
+          checkStatus: 0
+        }
+        listchangeFiles(form).then(res => {
+          this.project_changeList = res.rows
+        })
+        this.lefttopli1 = true
+        this.lefttopli2 = false
+      },
+      // 待修改
+      amend() {
+        let form = {
+          checkStatus: 2
+        }
+        listchangeFiles(form).then(res => {
+          this.project_changeList = res.rows
+        })
+        this.lefttopli2 = true
+        this.lefttopli1 = false
+      },
+      // 重置
+      resetQuery(){
+        this.project_changeList = []
+        this.projectListDetail = []
+         this.queryParams = {
+          changefilesStatus:undefined,
+          projectName:undefined,
+          changeType:undefined,
+          checkStatus:undefined
+        }
+      },
+      // 切换项目名称事件
+      projectaddid(row){
+       if(this.projectidadd != ''){
+          let eleNav =  document.getElementsByClassName('celloff')[0];
+               eleNav.click();
+       }else{
+           this.projectidadd = row
+       }
+
+      },
+      // 检查窗号
+      DetailWinNo(index ,scope){
+        if (scope.row.index == this.index) {
+          this.addRow()
+        }
+        if(this.alterationNum  != 4){
+          let form = {
+          projectId:this.projectidadd,
+          winNo:this.modificationform.modificationlist[index].winNo
+        }
+        if(this.add == true){
+          form.projectId = this.projectidadd
+        }else{
+           form.projectId = this.projectid
+        }
+        if(form.projectId == ''){
+           this.$message.error("请先选择项目")
+           this.modificationform.modificationlist[index].winNo = ''
+        }else{
+          getProjectDetailWinNo(form).then(res =>{
+          if(res.length == 0){
+            this.$message.error("该窗号不存在")
+            this.modificationform.modificationlist[index].winNo = ''
+          }
+           if(this.modificationform.modificationlist[index].winNo == ''){
+            this.modificationform.modificationlist[index].winModelName = ''
+            this.modificationform.modificationlist[index].partyWinNo = ''
+          }else{
+            this.modificationform.modificationlist[index].winModelName = res[0].winModelName
+            this.modificationform.modificationlist[index].partyWinNo = res[0].partyWinNo
+          }
+        })
+        }
+
+
+ }
+      },
+      // 点击列表数据
+      projectDetail(row, column, event) {
+        if(row.checkStatus == 1){
+           this.single = true
+        }else{
+          this.single = false
+        }
+        this.ID = row.id
+        this.projectid = row.projectId
+        this.projectname = row.projectName
+        this.changefilesname = row.changefilesName
+        listproject_detail(row.id).then(res => {
+          this.projectListDetail = res.rows
+          this.total1 = res.total;
+        })
+
+      },
+      // 变更类型字典翻译
+      changeTypeFormat(row, column){
+        return this.selectDictLabel(this.changeTypeOptions, row.changeType);
+      },
+      // 详情变更类型字典翻译
+      changefilesStatusFormat(row, column) {
+      return this.selectDictLabel(this.changefilesStatusOptions, row.changefilesStatus);
+      },
+      // 审核状态字典翻译
+      checkStatusFormat(row, column){
+        return this.selectDictLabel(this.checkStatusOptions, row.checkStatus);
+      },
+      Statuschange(val){
+       this.alterationNum = val
+       if(val == 4){
+         this.disabled = false
+         this.addDisabled = false
+       }else{
+         this.disabled = true
+       }
+      },
+      // 保存
+      submitForm(){
+        this.$refs["form"].validate((valid) =>{
+          if(valid){
+            if(this.audit == true){
+              this.projectAuditform.id = this.ID
+              console.log(this.projectAuditform.checkStatus)
+              if (this.projectAuditform.checkStatus == 2 && this.projectAuditform.checkContent == undefined){
+                this.$message.error("请输入驳回原因")
+                return
+              }else if(this.projectAuditform.checkStatus == 1 && this.projectAuditform.checkContent == undefined){
+                this.$message.error("请输入通过意见")
+                return
+              }if(this.projectAuditform.checkStatus == 0 && this.projectAuditform.checkContent == undefined){
+                this.$message.error("请输入未通过原因")
+                return
+              }
+              if(this.projectAuditform.checkStatus == 2){
+                checkProjectChange(this.projectAuditform).then(res => {
+                  this.msgSuccess("项目审核驳回");
+                  this.getList()
+                  this.auditform()
+                  this.reset()
+                  this.audit = false
+                  this.Show = true
+                })
+              }
+              if(this.projectAuditform.checkStatus == 1){
+                checkProjectChange(this.projectAuditform).then(res => {
+                  this.msgSuccess("项目审核通过");
+                  this.getList()
+                  this.auditform()
+                  this.reset()
+                  this.audit = false
+                  this.Show = true
+                })
+              }
+             if(this.projectAuditform.checkStatus == 0){
+               checkProjectChange(this.projectAuditform).then(res => {
+                 this.msgSuccess("项目审核未通过");
+                 this.getList()
+                 this.auditform()
+                 this.reset()
+                 this.audit = false
+                 this.Show = true
+               })
+             }
+
+            }else{
+              this.$refs["modificationform"].validate((val) =>{
+                if(val){
+                  if (this.add == true){
+              Addchangefiles(this.form).then(res =>{
+                if(this.modificationform.modificationlist.length != 0){
+                  let form = {
+                    changefilesId:res.data,
+                    projectChangefilesDetails:this.modificationform.modificationlist
+                  }
+                  addchangefilesDetails(form).then(res => {
+                    if (res.code === 200) {
+                      this.Show = true
+                      this.getList()
+                      this.reset()
+                      this.msgSuccess("新增成功");
+                    }
+                  })
+                }else{
+                  this.Show = true
+                  this.getList()
+                  this.reset()
+                  this.msgSuccess("新增成功");
+                }
+                         })
+            }else{
+              changefilesAdd(this.form).then(res =>{
+                this.Show = true
+                this.getList()
+                this.reset()
+                // this.msgSuccess('修改成功')
+              })
+              let form = {
+                changefilesId:this.ID,
+                projectChangefilesDetails:this.modificationform.modificationlist
+              }
+              updateChangefilesDetails(form).then(res => {
+                this.msgSuccess("修改成功");
+                this.addDisabled = false
+                listproject_detail(this.ID).then(res => {
+                  this.projectListDetail = res.rows
+                  this.detailform()
+                })
+
+              })
+            }
+                }else{
+                  this.$message.error("请填写完整项目")
+                }
+              })
+
+            }
+
+          }
+        })
+      },
+      // 提交上传文件
+      submitFileForm() {
+          this.$refs.upload.submit();
+      },
+      // 文件上传中处理
+      handleFileUploadProgress(event, file, fileList) {
+        this.upload.isUploading = true;
+      },
+      // 文件上传成功处理
+      handleFileSuccess(response, file, fileList) {
+        this.upload.open = false;
+        this.upload.isUploading = false;
+        this.$refs.upload.clearFiles();
+        this.$alert(response.msg, "导入结果", {
+          dangerouslyUseHTMLString: true,
+        });
+        this.getList();
+      },
+      // 取消
+      cancel(){
+        this.lister = ""
+        this.tabulationdata = ""
+        this.Show = true
+        this.open = false
+        this.audit = false
+        this.detail = false
+        this.addDisabled = false
+        this.reset()
+      },
+      // 定义class
+           cellClassName({ row, column, rowIndex, columnIndex }){
+             return 'table-cell-class'
+           }
+    },
+
+  }
+</script>
+<style lang="scss">
+  .table_a:link{
+    color: blue;
+  }
+  .table_a:visited{
+    color: blue;
+  }
+  .table_a:hover{
+    color: blue;
+  }
+  .table_a:active{
+    color: blue;
+  }
+</style>
+<style scoped="scoped">
+  .contentli {
+    color: #de710d;
+    background-image: linear-gradient(#fcead9, #f9dac0);
+    border: 1px solid #efbd96;
+    border-radius: 5px;
+  }
+  .top_content ul {
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
+  }
+
+  .top_content ul li {
+    cursor: pointer;
+    width: 100%;
+    height: 1.875rem;
+    margin-top: 0.625rem;
+    line-height: 1.875rem;
+  }
+
+  .left_bottom {
+    width: 100%;
+    height: 40%;
+  }
+
+  .left_top {
+    width: 100%;
+    height: 20%;
+    min-height: 124px;
+  }
+
+.btnc {
+    z-index: 99;
+    display: flex;
+    position: absolute;
+    right: 200px;
+    top: 1px;
+  }
+  .ss_ul{
+    pointer-events: none;
+    opacity: 0.5;
+  }
+  .project_changefiles {
+    width: 100%;
+    height: calc(100% - 104px);
+  }
+
+  .project_changefiles_top {
+    background-image: linear-gradient(#5692cf, #00356c);
+    height: 36px;
+    width: 100%;
+    padding: 5px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .project_changefiles_top ul li {
+    float: left;
+    line-height: 28px;
+    color: white;
+    border: 1px solid #5681af;
+    font-size: 0.75rem;
+    height: 28px;
+    /* width: 58px; */
+    min-width: 58px;
+    text-align: center;
+    border-radius: 5px;
+    background-image: linear-gradient(#71a1d2, #174f89);
+    cursor: pointer;
+    margin-left: 5px;
+  }
+
+  .project_changefiles_top ul li:hover {
+    background-image: linear-gradient(#92bde5, #1f548b);
+  }
+
+  .project_changefiles_conter {
+    background-color: #FFFFFF;
+    width: 100%;
+    height: calc(100% - 36px);
+    border: 1px solid #c0c0c0;
+    display: flex;
+    overflow: auto;
+  }
+
+  .conter_left {
+    width: 18%;
+    height: 100%;
+    border-right: 1px solid #b2b2b2;
+    background-color: #efefef;
+    font-size: 0.875rem;
+    overflow: auto;
+  }
+
+  .message {
+    width: 100%;
+    height: 30px;
+    line-height: 30px;
+    font-size: 0.75rem;
+    background-image: linear-gradient(#fdfdfe, #cfd0d1);
+    padding-left: 10px;
+    display: flex;
+    justify-content: space-between;
+    padding-right: 10px;
+
+  }
+
+  .messagenav {
+    color: #2a5b8c;
+    font-weight: 900;
+
+  }
+
+  .conter_right {
+    width: 82%;
+    height: 100%;
+  }
+  .right_bottom {
+    position: relative;
+    width: 100%;
+    height: 60%;
+  }
+  .right_top {
+    width: 100%;
+    height: 40%;
+  }
+
+  .ss {
+      /* width: 200px;
+      height: 30px; */
+      z-index: 99;
+      position: absolute;
+      right: 200px;
+      top: 1px;
+
+    }
+  .hideshow{
+    width: 100%;
+    height: 100%;
+  }
+  .showtop{
+    width: 100%;
+    height: 20%;
+    min-height: 124px;
+    border-bottom: 1px solid #c5c5c5;
+  }
+  .showbottom{
+    width: 100%;
+    height: 60%;
+    position: relative;
+  }
+  .showconter {
+    border-top: 1px solid #c5c5c5;
+    width: 100%;
+    height: calc(20% - 40px);
+    min-height: 124px;
+  }
+ /* 删除修改按钮是否操作 */
+  .notChoose {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+</style>
+<style lang="scss">
+
+</style>

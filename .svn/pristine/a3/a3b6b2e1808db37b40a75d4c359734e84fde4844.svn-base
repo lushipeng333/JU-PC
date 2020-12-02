@@ -1,0 +1,169 @@
+<template>
+  <div>
+    <!-- 整个背景div -->
+    <div class="header_bg">
+      <!-- 整个居中的div -->
+      <div class="centered">
+
+        <!-- 背景头部div -->
+        <div class="header_top">
+          <div class="loga">
+            <img src="../../assets/login/11112.png" alt="" align="bottom">
+            <h2>聚辉门窗</h2>
+          </div>
+          <div class="nav">
+            <div class="nav_top">
+
+                <TagsView></TagsView>
+
+
+            </div>
+          </div>
+          <keep-alive>
+            <router-view></router-view>
+          </keep-alive>
+
+        </div>
+
+        <Footer></Footer>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  import Footer from '../../components/footer/index.vue'
+  import Breadcrumb from '@/components/Breadcrumb'
+  import TagsView from '../../layout/components/TagsView/index.vue'
+
+  export default {
+    data() {
+      return {
+        cooter: 0,
+      }
+    },
+    methods: {},
+    components: {
+      Footer,
+      System,
+      Breadcrumb,
+      TagsView
+
+    },
+
+  }
+</script>
+
+<style scoped="scoped">
+  .router-link-active {
+    cursor: pointer;
+    color: #ccdbeb;
+  }
+
+  .header_bg {
+    width: 100%;
+    height: 100%;
+    background: -webkit-linear-gradient(#0061c4, #fff);
+    background: -o-linear-gradient(#0061c4, #fff);
+    background: -moz-linear-gradient(#0061c4, #fff);
+    background: linear-gradient(#0061c4, #fff);
+    position: fixed;
+    top: 0px;
+  }
+
+  .centered {
+    max-width: calc(100% - 180px);
+    height: 100%;
+
+    margin: 0 auto;
+  }
+
+  .header_top {
+    width: 100%;
+    height: 100%;
+  }
+
+  .loga {
+    width: 100%;
+    position: relative;
+    margin-top: 10px;
+    height: 40px;
+    display: flex;
+  }
+
+  .sealch {
+    width: 210px;
+    height: 26px;
+    position: absolute;
+    right: 0px;
+  }
+
+  /deep/ .ivu-input-small {
+    border-radius: 30px;
+    background: none;
+    background-color: #2072c4;
+    color: #c7ccd1;
+    border: 1px solid #a8acb0;
+  }
+
+  .sealch {
+    margin-top: 6px;
+  }
+
+  /deep/ .ivu-input-icon {
+    color: white;
+  }
+
+  .loga img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .loga h2 {
+    color: #fefefe;
+    font-size: 18px;
+    line-height: 42px;
+    margin-left: 10px;
+  }
+
+  .nav {
+
+    width: 100%;
+    height: 30px;
+    border-radius: 16px 16px 0px 0px;
+    /* display: inline-block; */
+    /* background-color: #0051a4; */
+    background-image: linear-gradient(to right, #0055a9, #004080);
+    border: 1px solid #0051a4;
+    margin-top: 10px;
+  }
+
+  .nav .nav_top ul li {
+    width: 70px;
+    list-style: none;
+    text-align: center;
+    float: left;
+    line-height: 30px;
+    font-size: 12px;
+    text-decoration: none;
+  }
+
+  .nav_top {
+    color: #ccdbeb;
+  }
+
+  .nav_li {
+    color: #FFFFFF;
+    background-color: #4886c5;
+    border-radius: 16px 0px 0px 0px;
+
+  }
+</style>
+<style>
+  .tags-view-container[data-v-fac8ca64] {
+      height: 34px;
+      width: 100%;
+      border-radius: 16px 16px 0px 0px;
+      background-image: linear-gradient(to right, #0055a9, #004080);
+  }
+</style>

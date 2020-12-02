@@ -1,0 +1,352 @@
+<template>
+	<div class="department">
+		<div class="department_top">
+			<ul>
+				<li>新增</li>
+				<li>修改</li>
+				<li>删除</li>
+				<li>复制</li>
+			</ul>
+			<ul>
+				<li style="margin-left: 10px;">查询</li>
+				<li>刷新</li>
+				<li>过滤</li>
+			</ul>
+			<ul>
+				<li style="margin-left: 10px;">启用</li>
+				<li>多版本</li>
+				<li>组织主管</li>
+			</ul>
+			<ul>
+				<li style="margin-left: 10px;"> 打印</li>
+			</ul>
+		</div>
+		<div class="department_conter">
+			<div class="conter_top">
+				业务单元：<input class="" type="text">
+			</div>
+			<div class="ct">
+				<ul class="ctUlone">
+					<li class="ctLione">
+						<div>
+							<el-input size="mini" prefix-icon="el-icon-search" placeholder="输入关键字进行过滤" v-model="filterText">
+							</el-input>
+
+							<el-tree class="filter-tree" :data="data" :props="defaultProps" default-expand-all :filter-node-method="filterNode"
+							 ref="tree">
+							</el-tree>
+						</div>
+					</li>
+					<li class="ctLitwo">
+						<div class="ctRight">
+							<div class="ctRight_top">
+								
+							
+							<ul>
+								<li>
+									<span>编码</span> &nbsp; &nbsp;
+									<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+								</li>
+								<li>
+									<span>部门级别</span> &nbsp; &nbsp;
+									<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+								</li>
+								<li>
+									<span>电话</span> &nbsp; &nbsp;
+									<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+								</li>
+								<li>
+									适用零售
+								</li>
+							</ul>
+							<ul>
+								<li>
+									<span>名称</span> &nbsp; &nbsp;
+									<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+								</li>
+								<li>
+									<span>部门成立时间</span> &nbsp; &nbsp;
+									<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+								</li>
+								<li>
+									<span>地址</span> &nbsp; &nbsp;
+									<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+								</li>
+								<li>
+									<span>启用状态</span> &nbsp; &nbsp;
+									<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+								</li>
+							</ul>
+							<ul>
+								<li>
+									<span>简称</span> &nbsp; &nbsp;
+									<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+								</li>
+								<li>
+									<span>助记码</span> &nbsp; &nbsp;
+									<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+								</li>
+								<li>
+									<span>备注</span> &nbsp; &nbsp;
+									<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+								</li>
+							</ul>
+							<ul>
+								<li>
+									<span>上级部门</span> &nbsp; &nbsp;
+									<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+								</li>
+								<li>
+									<span>显示顺序</span> &nbsp; &nbsp;
+									<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+								</li>
+								<li>
+										HR撤销标志
+								</li>
+								
+							</ul>
+							<ul>
+								<li>
+									<span>部门类型</span> &nbsp; &nbsp;
+									<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+								</li>
+								<li>
+									<span>负责人</span> &nbsp; &nbsp;
+									<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+								</li>
+								<li>
+								  预算
+								</li>
+							
+							</ul>
+						</div>
+						<div class="version">
+							<p>版本信息</p>
+							<ul>
+								<li>
+									<span>版本名称</span> &nbsp; &nbsp;
+									<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+								</li>
+								<li>
+									<span>版本号</span> &nbsp; &nbsp;
+									<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+								</li>
+								<li>
+									<span>版本生效日期</span> &nbsp; &nbsp;
+									<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+								</li>
+								<li>
+									<span>版本失效日期</span> &nbsp; &nbsp;
+									<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+								</li>
+							</ul>
+						</div>
+						<div class="audit">
+							<p>审计信息</p>
+							<ul>
+								<li>
+									<span>创建人</span> &nbsp; &nbsp;
+									<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+								</li>
+								<li>
+									<span>创建时间</span> &nbsp; &nbsp;
+									<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+								</li>
+								<li>
+									<span>最后修改人</span> &nbsp; &nbsp;
+									<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+								</li>
+								<li>
+									<span>最后修改时间</span> &nbsp; &nbsp;
+									<el-input v-model="input1" size="mini" style="width: 120px;" class="input1"></el-input>
+								</li>
+							</ul>
+						</div>
+						</div>
+					</li>
+				</ul>
+			</div>
+
+		</div>
+	</div>
+</template>
+
+<script>
+	export default {
+		name: 'department',
+		data() {
+			return {
+				input1:'',
+				input4: '',
+				input3: '',
+				filterText: '',
+				data: [{
+					id: 1,
+					label: '部门',
+					children: [{
+							id: 2,
+							label: '董事会',
+							children: [{
+								id: 10,
+								label: '三级'
+							}, ]
+						},
+						{
+							id: 3,
+							label: '股东会',
+						},
+						{
+							id: 4,
+							label: '行政部',
+						},
+						{
+							id: 5,
+							label: '信息部',
+						},
+						{
+							id: 6,
+							label: '生产部',
+						},
+						{
+							id: 7,
+							label: '人力资源部',
+						},
+						{
+							id: 8,
+							label: '财务部',
+						},
+						{
+							id: 9,
+							label: '项目部',
+						}
+					]
+				}],
+				defaultProps: {
+					children: 'children',
+					label: 'label'
+				}
+
+			}
+		},
+		watch: {
+			filterText(val) {
+				this.$refs.tree.filter(val);
+			}
+		},
+
+		methods: {
+			filterNode(value, data) {
+				if (!value) return true;
+				return data.label.indexOf(value) !== -1;
+			}
+		},
+	}
+</script>
+
+<style scoped="scoped">
+	
+	.department_top {
+		background-image: linear-gradient(#5692cf, #00356c);
+		height: 40px;
+		width: 100%;
+		margin-top: -3px;
+		padding: 5px;
+	}
+
+	.department_top ul li {
+		float: left;
+		line-height: 28px;
+		color: white;
+		border: 1px solid #5681af;
+		font-size: 12px;
+		height: 28px;
+		width: 58px;
+		text-align: center;
+		border-radius: 5px;
+		background-image: linear-gradient(#71a1d2, #174f89);
+		cursor: pointer;
+	}
+
+	.department_conter {
+		background-color: #FFFFFF;
+		width: 100%;
+		height: 850px;
+		border: 1px solid #c0c0c0;
+		/* display: flex; */
+	}
+
+	.conter_top {
+		width: 100%;
+		height: 30px;
+	}
+
+	.ct {
+		width: 100%;
+		height: 100%;
+
+	}
+
+	.ct .ctUlone .ctLione{
+		float: left;
+	}
+    .ct .ctUlone .ctLitwo{
+		float: left;
+	}
+	.ct ul {
+		width: 100%;
+		height: 100%;
+	}
+
+	.ct .ctLione{
+		width: 20%;
+		height: 100%;
+		border: 1px solid #b2b2b2;
+		padding-left: 10px;
+		padding-top: 10px;
+		padding-right: 10px;
+	}
+	
+	.ctRight ul li{
+		 margin-top: 4px;
+		 margin-left: 10px;
+			font-size: 12px;
+	}
+	.input1{
+		height: 20px;
+	}
+	.ctRight ul li{
+		text-align: right;
+		padding-right: 40px;
+	}
+	.ctLitwo{
+		width: 80%;
+		height: 100%;	
+	}
+	.ctRight_top{
+		display: flex;
+		justify-content: center;
+	}
+	.version{
+		padding-left: 20px;
+	}
+	.version ul li{
+		float: left;
+		margin-top: 10px;
+	}
+	.audit{
+		padding-left: 20px;
+		display: inline-block;
+			margin-top: 10px;
+	}
+	.audit ul li{
+		margin-top: 10px;
+		float: left;
+	}
+</style>
+<style>
+	.input1 .el-input__inner {
+		height: 20px;
+		/* padding-left: 5px; */
+	
+	}
+</style>

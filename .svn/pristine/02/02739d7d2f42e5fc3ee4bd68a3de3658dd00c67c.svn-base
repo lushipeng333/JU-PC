@@ -1,0 +1,124 @@
+import request from '@/utils/request'
+
+// 查询列表
+export function listBuildinginfo(query) {
+  return request({
+    url: '/project/buildinginfo/list',
+    method: 'get',
+    params: query
+  })
+}
+
+// 下拉框获取项目
+export function getProject(query){
+  return request({
+    url: '/project/mes_project/getProject',
+    method: 'get',
+    params: query
+  })
+}
+
+// 查询项目窗号
+export function findList(data) {
+  return request({
+    url: '/project/mes_project_detail/findList',
+    method: 'post',
+    data: data
+  })
+}
+
+// 查询窗型编号
+export function wiNofindList(data) {
+  return request({
+    url: '/project/mes_win_model/findList',
+    method: 'post',
+    data: data
+  })
+}
+
+// 添加详情
+export function addbuildinginfo(data) {
+  return request({
+    url: '/project/buildinginfo/add',
+    method: 'post',
+    data: data
+  })
+}
+
+// 查询单个列表
+export function getProjectBuildinginfoById(id) {
+  return request({
+    url: 'project/buildinginfo/getProjectBuildinginfoById?id=' + id ,
+    method: 'get',
+  })
+}
+
+// 编辑
+export function buildinginfoEdit(data) {
+  return request({
+    url: '/project/buildinginfo/edit',
+    method: 'post',
+    data: data
+  })
+}
+
+// 删除项目
+export function removebuildinginfo(data) {
+  return request({
+    url: '/project/buildinginfo/remove',
+    method: 'delete',
+    data:data
+  })
+}
+
+// 导出
+export function exportbuildinginfo(query){
+  return request({
+    url: '/project/buildinginfo/export',
+    method: 'get',
+    params: query
+  })
+}
+// 获取楼层
+export function buildingNofindList(data){
+  return request({
+    url: '/project/buildinginfo/findList',
+    method: 'post',
+    data: data
+  })
+}
+
+// 下载导入模板
+export function importTemplate() {
+  return request({
+    url: '/project/buildinginfo/importTemplate',
+    method: 'get'
+  })
+}
+
+// 修改全部窗型
+export function updateAllwindow(data){
+  return request({
+    url: '/project/buildinginfo/updateAll',
+    method: 'put',
+    data: data
+  })
+}
+
+// 全部窗号查询
+export function Allwindow(query){
+  return request({
+    url: '/project/mes_win_model/list',
+    method: 'get',
+    params: query
+  })
+}
+
+// 快速添加
+export function copyDataAdd(data,flag){
+  return request({
+    url: '/project/buildinginfo/copyData?flag=' + flag,
+    method: 'post',
+    data: data
+  })
+}
